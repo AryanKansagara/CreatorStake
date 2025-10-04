@@ -235,9 +235,7 @@ const Feed = () => {
             disabled={isSigningOut}
           >
             <User size={22} />
-            <span className="hidden md:inline">
-              {isSigningOut ? "Signing Out..." : "Sign Out"}
-            </span>
+            <span className="hidden md:inline">Sign Out</span>
           </Button>
         </div>
         
