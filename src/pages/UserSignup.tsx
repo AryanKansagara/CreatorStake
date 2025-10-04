@@ -136,7 +136,7 @@ const UserSignup = () => {
       <FloatingOrbs />
       
       <div className="w-full max-w-2xl glass-card p-8 shadow-xl animate-blur-in relative z-10 glow-border light-reflection">
-        <h1 className="text-3xl font-bold text-center mb-6 animate-scale-pulse">Join Starvest</h1>
+        <h1 className="text-3xl font-bold text-center mb-6 animate-scale-pulse">Join CreatorStake</h1>
         
         <Tabs 
           defaultValue="signup" 
@@ -216,14 +216,13 @@ const UserSignup = () => {
               <form onSubmit={handleNextStep} className="space-y-6 animate-reveal">
                 <div className="space-y-2 animate-reveal-delay-100">
                   <Label htmlFor="signup-username">Choose Username *</Label>
-                  <div className="relative">
-                    <AtSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <div>
                     <Input 
                       id="signup-username" 
-                      className="glass-input pl-10" 
+                      className="glass-input" 
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Your unique username"
+                      placeholder="@your_username"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">This will be your @handle on the platform</p>
