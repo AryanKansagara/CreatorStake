@@ -15,6 +15,7 @@ import UserSignup from "./pages/UserSignup";
 import CreatorProfile from "./components/CreatorProfile";
 import CreatorProfileV2 from "./components/CreatorProfileV2";
 import { Dashboard } from "./components/Dashboard";
+import { CreatorDashboard } from "./components/CreatorDashboard";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard userType="fan" />} />
+              <Route path="/creator-dashboard" element={<CreatorDashboard />} />
               <Route path="/feed" element={<Feed />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="/creator/:id" element={<CreatorProfileV2 />} />
