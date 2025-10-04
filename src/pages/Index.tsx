@@ -37,7 +37,11 @@ const Index = () => {
             <Button
               variant={viewMode === "dashboard" ? "default" : "ghost"}
               onClick={() => setViewMode("dashboard")}
-              className={`gap-2 ${viewMode === "dashboard" ? "glass-button" : ""}`}
+              className={`gap-2 ${
+                viewMode === "dashboard" 
+                  ? "glass-button text-white" 
+                  : "text-white/80 hover:text-white hover:bg-white/10 border border-white/20"
+              }`}
             >
               <BarChart3 className="w-4 h-4" />
               Dashboard
