@@ -320,7 +320,7 @@ const Feed = () => {
                 </div>
                 <Button 
                   size="sm" 
-                  className="mt-1 glass-button bg-white text-black hover:bg-white/90"
+                  className="mt-1 bg-white text-black hover:bg-white/90 border border-white/30"
                   onClick={() => openInvestModal(post.creator)}
                 >
                   Invest
@@ -521,7 +521,7 @@ const Feed = () => {
             </Button>
             <Button 
               type="button" 
-              className="glass-button bg-white text-black hover:bg-white/90"
+              className="bg-white text-black hover:bg-white/90 border border-white/30"
               onClick={handleInvest}
             >
               Confirm Investment

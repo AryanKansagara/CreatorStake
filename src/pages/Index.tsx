@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Hero } from "@/components/Hero";
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
 import { Dashboard } from "@/components/Dashboard";
@@ -8,6 +9,7 @@ import { TrendingUp, BarChart3, Sparkles } from "lucide-react";
 type ViewMode = "discover" | "dashboard";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("discover");
   const [userType] = useState<"fan" | "creator">("fan"); // Mock user type
   const [tokens] = useState(1000); // Mock token balance
@@ -26,7 +28,7 @@ const Index = () => {
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={() => setViewMode("discover")}
+              onClick={() => navigate("/signup")}
               className="gap-2 bg-white text-black hover:bg-white/90 border-white/30"
             >
               <TrendingUp className="w-4 h-4" />
