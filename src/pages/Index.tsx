@@ -18,19 +18,16 @@ const Index = () => {
       <nav className="fixed top-0 w-full z-50 glass border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl glass flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <span className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               CreatorStake
             </span>
           </div>
           
           <div className="flex items-center gap-4">
             <Button
-              variant={viewMode === "discover" ? "default" : "ghost"}
+              variant="outline"
               onClick={() => setViewMode("discover")}
-              className={`gap-2 ${viewMode === "discover" ? "glass-button" : ""}`}
+              className="gap-2 bg-white text-black hover:bg-white/90 border-white/30"
             >
               <TrendingUp className="w-4 h-4" />
               Discover
