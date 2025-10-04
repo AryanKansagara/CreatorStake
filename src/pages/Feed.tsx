@@ -1,26 +1,36 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from '@supabase/supabase-js';
+import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Navigation } from "@/components/Navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Heart,
-  MessageCircle,
-  Share2,
-  Bookmark,
-  DollarSign,
-  ChevronUp,
-  ChevronDown,
-  TrendingUp,
-  Users,
-  Search,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import {
   Bell,
   Home,
-  User
+  Search,
+  TrendingUp,
+  User,
+  Users,
+  Heart,
+  MessageCircle,
+  MessageSquare,
+  Bookmark,
+  Share2,
+  MoreVertical,
+  DollarSign,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -309,51 +319,8 @@ const Feed = () => {
 
   return (
     <div className="min-h-screen bg-gradient-hero flex">
-      {/* Left sidebar navigation */}
-      <div className="w-16 md:w-64 glass border-r border-white/10 fixed h-full left-0 top-0 z-40 flex flex-col py-6">
-        <div className="flex items-center justify-center md:justify-start md:px-6 mb-10">
-          <h1 className="text-xl font-bold hidden md:block">CreatorStake</h1>
-          <div className="w-10 h-10 rounded-xl glass flex items-center justify-center md:hidden">
-            <TrendingUp className="w-6 h-6 text-primary-foreground" />
-          </div>
-        </div>
-        
-        <div className="flex flex-col items-center md:items-start gap-6 flex-1 px-2 md:px-4">
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3" onClick={() => navigate("/")}>
-            <Home size={22} />
-            <span className="hidden md:inline">Home</span>
-          </Button>
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3">
-            <Search size={22} />
-            <span className="hidden md:inline">Search</span>
-          </Button>
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3 bg-white/10" onClick={() => navigate("/feed")}>
-            <Users size={22} />
-            <span className="hidden md:inline">Feed</span>
-          </Button>
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3" onClick={() => navigate("/dashboard")}>
-            <TrendingUp size={22} />
-            <span className="hidden md:inline">Invest</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="w-full justify-center md:justify-start gap-3" 
-            onClick={() => signOut()}
-            disabled={isSigningOut}
-          >
-            <User size={22} />
-            <span className="hidden md:inline">Sign Out</span>
-          </Button>
-        </div>
-        
-        <div className="px-2 md:px-4 mt-auto">
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3">
-            <Bell size={22} />
-            <span className="hidden md:inline">Notifications</span>
-            <span className="w-5 h-5 rounded-full bg-accent text-xs flex items-center justify-center ml-auto">3</span>
-          </Button>
-        </div>
-      </div>
+      {/* Navigation Sidebar */}
+      <Navigation activePath="/feed" />
       
       {/* Main content */}
       <div className="ml-16 md:ml-64 flex-1">
