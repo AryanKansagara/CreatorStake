@@ -13,7 +13,8 @@ const mockCreators = [
     investmentAmount: 50,
     totalBackers: 234,
     content: "Building the future of indie games. Join me on this journey! 🎮",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
+    avatar: "https://unsplash.com/photos/man-sitting-on-gray-concrete-wall-_M6gy9oHgII",
+    creatorImage: "/user5.jpg",
   },
   {
     id: "2",
@@ -26,7 +27,7 @@ const mockCreators = [
     investmentAmount: 100,
     totalBackers: 567,
     content: "Sustainable fashion for the modern world. Let's change the industry together! 🌱",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
+    creatorImage: "/user3.jpg",
   },
   {
     id: "3",
@@ -39,7 +40,7 @@ const mockCreators = [
     investmentAmount: 75,
     totalBackers: 412,
     content: "Creating beats that move souls. Your support means everything! 🎵",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus",
+    creatorImage: "/user2.jpg",
   },
   {
     id: "4",
@@ -52,7 +53,7 @@ const mockCreators = [
     investmentAmount: 60,
     totalBackers: 389,
     content: "Making science fun and accessible for everyone. Let's learn together! 🔬",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
+    creatorImage: "/user1.jpg",
   },
 ];
 

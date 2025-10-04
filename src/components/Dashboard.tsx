@@ -15,6 +15,7 @@ const mockInvestments = [
     return: 70,
     stake: 2.3,
     status: "growing",
+    creatorImage: "/user1.jpg",
   },
   {
     creator: "Sarah Chen",
@@ -24,6 +25,7 @@ const mockInvestments = [
     return: 90,
     stake: 1.8,
     status: "growing",
+    creatorImage: "/user2.jpg",
   },
   {
     creator: "Marcus Johnson",
@@ -32,7 +34,9 @@ const mockInvestments = [
     currentValue: 165,
     return: 65,
     stake: 1.2,
-    status: "growing",
+    status: "growing",  
+    creatorImage: "/user3.jpg",
+    
   },
 ];
 
@@ -54,9 +58,9 @@ export const Dashboard = ({ userType }: DashboardProps) => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="p-6 bg-card border-border shadow-card">
+          <Card className="p-6 glass-card">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg glass flex items-center justify-center">
                 <Coins className="w-5 h-5 text-primary" />
               </div>
               <span className="text-sm text-muted-foreground">Total Invested</span>
@@ -65,9 +69,9 @@ export const Dashboard = ({ userType }: DashboardProps) => {
             <div className="text-xs text-muted-foreground mt-1">tokens</div>
           </Card>
 
-          <Card className="p-6 bg-card border-border shadow-card">
+          <Card className="p-6 glass-card">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg glass flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-accent" />
               </div>
               <span className="text-sm text-muted-foreground">Current Value</span>
@@ -76,9 +80,9 @@ export const Dashboard = ({ userType }: DashboardProps) => {
             <div className="text-xs text-muted-foreground mt-1">tokens</div>
           </Card>
 
-          <Card className="p-6 bg-card border-border shadow-card">
+          <Card className="p-6 glass-card">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg glass flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-success" />
               </div>
               <span className="text-sm text-muted-foreground">Total Return</span>
@@ -87,9 +91,9 @@ export const Dashboard = ({ userType }: DashboardProps) => {
             <div className="text-xs text-success mt-1">+{totalValue - totalInvested} tokens</div>
           </Card>
 
-          <Card className="p-6 bg-card border-border shadow-card">
+          <Card className="p-6 glass-card">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg glass flex items-center justify-center">
                 <Users className="w-5 h-5 text-primary" />
               </div>
               <span className="text-sm text-muted-foreground">Creators Backed</span>
@@ -100,22 +104,22 @@ export const Dashboard = ({ userType }: DashboardProps) => {
         </div>
 
         {/* Investments Table */}
-        <Card className="p-6 bg-card border-border shadow-card">
+        <Card className="p-6 glass-card">
           <h2 className="text-2xl font-bold mb-6">Your Investments</h2>
           <div className="space-y-4">
             {mockInvestments.map((investment, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 rounded-lg bg-background/50 border border-border hover:border-primary/20 transition-colors"
+                className="flex items-center justify-between p-4 rounded-lg glass hover:border-white/20 transition-colors"
               >
                 <div className="flex items-center gap-4 flex-1">
                   <img
-                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${investment.creator}`}
+                    src={"/user1.jpg"}
                     alt={investment.creator}
-                    className="w-12 h-12 rounded-full"
+                    className="w-12 h-12 rounded-full object-cover"
                   />
                   <div>
-                    <div className="font-semibold">{investment.creator}</div>
+                    <div className="font-semibold">Test</div>
                     <div className="text-sm text-muted-foreground">{investment.handle}</div>
                   </div>
                 </div>

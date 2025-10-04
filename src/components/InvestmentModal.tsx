@@ -41,7 +41,7 @@ export const InvestmentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md glass-card">
         <DialogHeader>
           <DialogTitle className="text-2xl">Back {creator.name}</DialogTitle>
           <DialogDescription>
@@ -51,7 +51,7 @@ export const InvestmentModal = ({
 
         <div className="space-y-6 py-4">
           {/* Creator Info */}
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border">
+          <div className="flex items-center gap-3 p-4 rounded-lg glass">
             <img
               src={creator.avatar}
               alt={creator.name}
@@ -87,7 +87,7 @@ export const InvestmentModal = ({
           </div>
 
           {/* Investment Details */}
-          <div className="space-y-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
+          <div className="space-y-3 p-4 rounded-lg glass">
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Your Stake</span>
               <span className="text-sm font-semibold">{stakePercentage.toFixed(2)}%</span>
@@ -102,7 +102,7 @@ export const InvestmentModal = ({
           </div>
 
           {/* Warning */}
-          <div className="flex gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20">
+          <div className="flex gap-2 p-3 rounded-lg glass">
             <AlertCircle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
               Returns are estimates based on creator potential. Actual returns may vary.
@@ -111,10 +111,10 @@ export const InvestmentModal = ({
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button variant="outline" onClick={onClose} className="flex-1">
+            <Button variant="outline" onClick={onClose} className="flex-1 glass-button">
               Cancel
             </Button>
-            <Button onClick={handleInvest} className="flex-1 shadow-glow">
+            <Button onClick={handleInvest} className="flex-1 glass-button shadow-glow">
               Confirm Investment
             </Button>
           </div>
