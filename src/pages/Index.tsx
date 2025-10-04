@@ -15,10 +15,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+      <nav className="fixed top-0 w-full z-50 glass border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl glass flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
@@ -30,7 +30,7 @@ const Index = () => {
             <Button
               variant={viewMode === "discover" ? "default" : "ghost"}
               onClick={() => setViewMode("discover")}
-              className="gap-2"
+              className={`gap-2 ${viewMode === "discover" ? "glass-button" : ""}`}
             >
               <TrendingUp className="w-4 h-4" />
               Discover
@@ -38,12 +38,12 @@ const Index = () => {
             <Button
               variant={viewMode === "dashboard" ? "default" : "ghost"}
               onClick={() => setViewMode("dashboard")}
-              className="gap-2"
+              className={`gap-2 ${viewMode === "dashboard" ? "glass-button" : ""}`}
             >
               <BarChart3 className="w-4 h-4" />
               Dashboard
             </Button>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg glass">
               <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
               <span className="text-sm font-medium">{tokens} tokens</span>
             </div>

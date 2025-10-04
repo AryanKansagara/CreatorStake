@@ -8,45 +8,49 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    /* Black and white theme with glass effect */
+    --background: 0 0% 0%; /* Pure black */
+    --foreground: 0 0% 100%; /* Pure white */
 
-    --card: 240 10% 5.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 5%; /* Very dark gray for cards */
+    --card-foreground: 0 0% 100%; /* White text on cards */
 
-    --popover: 240 10% 5.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 263 70% 50%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 263 70% 65%;
+    /* Changed from purple to black/white */
+    --primary: 0 0% 100%; /* White as primary */
+    --primary-foreground: 0 0% 0%; /* Black text on primary */
+    --primary-glow: 0 0% 90%; /* Slight white glow */
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 0 0% 15%; /* Dark gray */
+    --secondary-foreground: 0 0% 100%; /* White text on secondary */
 
-    --muted: 240 5% 26%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 0 0% 20%; /* Dark gray for muted areas */
+    --muted-foreground: 0 0% 70%; /* Light gray for muted text */
 
-    --accent: 172 66% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 85%; /* Light gray as accent */
+    --accent-foreground: 0 0% 0%; /* Black text on accent */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%; /* Keeping red for destructive */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 20%;
-    --input: 240 6% 20%;
-    --ring: 263 70% 50%;
+    --border: 0 0% 20%; /* Dark gray borders */
+    --input: 0 0% 20%;
+    --ring: 0 0% 80%; /* Light gray for focus rings */
 
-    --success: 142 76% 36%;
-    --warning: 38 92% 50%;
+    --success: 142 76% 36%; /* Keeping success color */
+    --warning: 38 92% 50%; /* Keeping warning color */
 
     --radius: 0.75rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(263 70% 50%), hsl(217 91% 60%));
-    --gradient-accent: linear-gradient(135deg, hsl(172 66% 50%), hsl(142 76% 50%));
-    --gradient-hero: linear-gradient(180deg, hsl(240 10% 3.9%), hsl(240 10% 8%));
+    /* Updated gradients to black and white theme */
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 100%), hsl(0 0% 80%));
+    --gradient-accent: linear-gradient(135deg, hsl(0 0% 90%), hsl(0 0% 70%));
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 0%), hsl(0 0% 8%));
     
-    --shadow-glow: 0 0 40px hsl(263 70% 50% / 0.3);
+    /* Glass effect shadows */
+    --shadow-glow: 0 0 40px hsl(0 0% 100% / 0.2);
     --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.4);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,5 +64,30 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Glass effect utility classes */
+@layer utilities {
+  .glass {
+    @apply bg-opacity-10 backdrop-blur-md border border-white/10 shadow-xl;
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .glass-card {
+    @apply glass rounded-lg p-4;
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .glass-button {
+    @apply glass rounded-md px-4 py-2 hover:bg-white/10 transition-all;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-input {
+    @apply glass rounded-md px-3 py-2 focus:ring-2 focus:ring-white/20 outline-none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
