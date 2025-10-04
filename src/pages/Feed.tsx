@@ -69,7 +69,7 @@ const Feed = () => {
         console.error("Sign out error:", error);
       } else {
         toast.success("Signed out successfully");
-        navigate('/login');
+        navigate('/signup');
       }
     } catch (error: any) {
       console.error("Sign out failed:", error);
