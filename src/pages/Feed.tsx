@@ -63,6 +63,7 @@ interface DbPost {
 
 interface Creator {
   id: string;
+  userId: string; // Added userId for navigation to creator profile
   name: string;
   handle: string;
   avatar: string;
@@ -146,6 +147,7 @@ const Feed = () => {
           
           formattedCreators[creator.id] = {
             id: creator.id,
+            userId: creator.user_id, // Store user_id to use for navigation
             name: userName,
             handle: handle,
             avatar: creator.users?.profile_image_url || '/user1.jpg',
@@ -423,7 +425,7 @@ const Feed = () => {
               <div className="flex items-center gap-3">
                 <Avatar 
                   className="cursor-pointer" 
-                  onClick={() => navigate(`/creator/${post.creator.id}`)}
+                  onClick={() => navigate(`/creator/${post.creator.userId}`)}
                 >
                   <img 
                     src={post.creator.avatar} 
@@ -433,7 +435,7 @@ const Feed = () => {
                 </Avatar>
                 <div 
                   className="cursor-pointer" 
-                  onClick={() => navigate(`/creator/${post.creator.id}`)}
+                  onClick={() => navigate(`/creator/${post.creator.userId}`)}
                 >
                   <div className="flex items-center gap-1">
                     <span className="font-semibold">{post.creator.name}</span>
@@ -531,7 +533,7 @@ const Feed = () => {
                     size="sm" 
                     variant="ghost"
                     className="h-auto p-0"
-                    onClick={() => navigate(`/creator/${post.creator.id}`)}
+                    onClick={() => navigate(`/creator/${post.creator.userId}`)}
                   >
                     View Profile
                   </Button>
