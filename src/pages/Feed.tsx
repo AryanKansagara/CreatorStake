@@ -227,20 +227,49 @@ const Feed = () => {
         </header>
 
       {/* Stories row */}
-      <div className="container max-w-4xl mx-auto px-4 mt-6 overflow-x-auto">
-        <div className="flex gap-4 pb-2">
-          {stories.map((story) => (
-            <div key={story.id} className="flex flex-col items-center">
-              <div className={`w-12 h-12 rounded-full p-[2px] ${story.hasNew ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600' : 'bg-gray-700'}`}>
-                <div className="w-full h-full rounded-full overflow-hidden glass">
-                  <img 
-                    src={story.avatar} 
-                    alt={story.name} 
-                    className="w-full h-full object-cover"
-                  />
+      <div className="container max-w-4xl mx-auto px-4 mt-6 mb-8 overflow-x-auto">
+        <div className="flex gap-6 pb-4 pl-2">
+          {/* Your Story */}
+          <div className="w-[110px] cursor-pointer group">
+            <div className="relative glass-card rounded-xl overflow-hidden aspect-[4/5] transform transition-all duration-300 hover:-translate-y-2 hover:shadow-glow rotate-[-2deg] hover:rotate-0">
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent to-black/30">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full glass bg-white/10 border border-white/20 mt-[-40px]">
+                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
+                    <span className="text-lg">+</span>
+                  </div>
                 </div>
               </div>
-              <span className="text-[10px] mt-1 truncate w-12 text-center">{story.name}</span>
+              <div className="absolute bottom-3 left-0 right-0 text-center">
+                <span className="text-xs font-medium">Your Story</span>
+              </div>
+            </div>
+          </div>
+
+          {stories.map((story, index) => (
+            <div key={story.id} className="w-[110px] cursor-pointer group">
+              <div 
+                className={`relative glass-card rounded-xl overflow-hidden aspect-[4/5] transform transition-all duration-300 
+                  hover:-translate-y-2 hover:shadow-glow 
+                  ${index % 3 === 0 ? 'rotate-[2deg] hover:rotate-0' : index % 3 === 1 ? 'rotate-[-2deg] hover:rotate-0' : ''}`}
+                style={{
+                  backgroundImage: `url(${story.avatar})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                <div className="absolute top-3 left-1/2 transform -translate-x-1/2">
+                  <div className={`w-10 h-10 rounded-full border-2 ${story.hasNew ? 'border-accent' : 'border-white/20'} overflow-hidden`}>
+                    <img 
+                      src={story.avatar} 
+                      alt={story.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-center pb-3">
+                  <span className="text-xs font-medium truncate max-w-[90%]">{story.name}</span>
+                </div>
+              </div>
             </div>
           ))}
         </div>

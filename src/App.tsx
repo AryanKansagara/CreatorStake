@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Feed from "./pages/Feed";
 import CreatorSignup from "./pages/CreatorSignup";
+import UserSignup from "./pages/UserSignup";
 
 import CreatorProfile from "./components/CreatorProfile";
 import CreatorProfileV2 from "./components/CreatorProfileV2";
@@ -30,6 +31,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/creator/:id" element={<CreatorProfileV2 />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<UserSignup />} />
             <Route path="/creator-signup" element={<CreatorSignup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
