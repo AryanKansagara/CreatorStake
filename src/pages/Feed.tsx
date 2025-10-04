@@ -1,0 +1,507 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Heart,
+  MessageCircle,
+  Share2,
+  Bookmark,
+  DollarSign,
+  ChevronUp,
+  ChevronDown,
+  TrendingUp,
+  Users,
+  Search,
+  Bell,
+  Home,
+  User
+} from "lucide-react";
+import { toast } from "sonner";
+
+// Define types
+interface Creator {
+  id: string;
+  name: string;
+  handle: string;
+  avatar: string;
+  verified: boolean;
+  stockPrice: number;
+  priceChange: number;
+  followers: number;
+  investors: number;
+}
+
+interface Post {
+  id: string;
+  creator: Creator;
+  content: string;
+  image: string;
+  likes: number;
+  comments: number;
+  isLiked: boolean;
+  isBookmarked: boolean;
+  timePosted: string;
+}
+
+const Feed = () => {
+  const navigate = useNavigate();
+  const [posts, setPosts] = useState<Post[]>([
+    {
+      id: "1",
+      creator: {
+        id: "1",
+        name: "Alex Rivera",
+        handle: "@alexcreates",
+        avatar: "/user1.jpg",
+        verified: true,
+        stockPrice: 23.75,
+        priceChange: 5.2,
+        followers: 12500,
+        investors: 356
+      },
+      content: "Just dropped my new game demo! Check it out and let me know what you think. This is just the beginning of something massive. #gamedev #indiedev",
+      image: "/user5.jpg",
+      likes: 438,
+      comments: 56,
+      isLiked: false,
+      isBookmarked: false,
+      timePosted: "2h"
+    },
+    {
+      id: "2",
+      creator: {
+        id: "2",
+        name: "Sarah Chen",
+        handle: "@sarahstyle",
+        avatar: "/user2.jpg",
+        verified: true,
+        stockPrice: 48.32,
+        priceChange: 12.7,
+        followers: 34200,
+        investors: 890
+      },
+      content: "New sustainable fashion line dropping next month. Here's a sneak peek at what we've been working on. Ethical fashion without compromise. #sustainablefashion",
+      image: "/user3.jpg",
+      likes: 1253,
+      comments: 124,
+      isLiked: true,
+      isBookmarked: true,
+      timePosted: "5h"
+    },
+    {
+      id: "3",
+      creator: {
+        id: "3",
+        name: "Marcus Johnson",
+        handle: "@marcusmusic",
+        avatar: "/user3.jpg",
+        verified: false,
+        stockPrice: 12.85,
+        priceChange: -2.4,
+        followers: 8900,
+        investors: 215
+      },
+      content: "In the studio working on my next album. Can't wait to share what I've been creating. This one's going to change everything. #music #newalbum",
+      image: "/user2.jpg",
+      likes: 678,
+      comments: 89,
+      isLiked: false,
+      isBookmarked: false,
+      timePosted: "1d"
+    }
+  ]);
+
+  const [stories, setStories] = useState([
+    { id: "1", name: "minhhgoc", avatar: "/user1.jpg", hasNew: true },
+    { id: "2", name: "aidan_du", avatar: "/user2.jpg", hasNew: true },
+    { id: "3", name: "emmaa.w", avatar: "/user3.jpg", hasNew: true },
+    { id: "4", name: "seyisexual", avatar: "/user1.jpg", hasNew: true },
+    { id: "5", name: "mrr_rxx", avatar: "/user2.jpg", hasNew: true },
+    { id: "6", name: "bayou_b.o.a", avatar: "/user3.jpg", hasNew: true },
+  ]);
+
+  const [showInvestModal, setShowInvestModal] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
+  const [investmentAmount, setInvestmentAmount] = useState(100);
+
+  const handleLike = (postId: string) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        const newIsLiked = !post.isLiked;
+        return {
+          ...post,
+          isLiked: newIsLiked,
+          likes: newIsLiked ? post.likes + 1 : post.likes - 1
+        };
+      }
+      return post;
+    }));
+  };
+
+  const handleBookmark = (postId: string) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return { ...post, isBookmarked: !post.isBookmarked };
+      }
+      return post;
+    }));
+  };
+
+  const openInvestModal = (creator: Creator) => {
+    setSelectedCreator(creator);
+    setShowInvestModal(true);
+  };
+
+  const handleInvest = () => {
+    if (selectedCreator) {
+      toast.success(`Successfully invested ${investmentAmount} tokens in ${selectedCreator.name}'s creator stock!`);
+      setShowInvestModal(false);
+      setInvestmentAmount(100); // Reset for next time
+    }
+  };
+
+  const formatCompactNumber = (num: number): string => {
+    if (num < 1000) return num.toString();
+    if (num < 1000000) return `${(num / 1000).toFixed(1)}k`;
+    return `${(num / 1000000).toFixed(1)}M`;
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-hero flex">
+      {/* Left sidebar navigation */}
+      <div className="w-16 md:w-64 glass border-r border-white/10 fixed h-full left-0 top-0 z-40 flex flex-col py-6">
+        <div className="flex items-center justify-center md:justify-start md:px-6 mb-10">
+          <h1 className="text-xl font-bold hidden md:block">CreatorStake</h1>
+          <div className="w-10 h-10 rounded-xl glass flex items-center justify-center md:hidden">
+            <TrendingUp className="w-6 h-6 text-primary-foreground" />
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-center md:items-start gap-6 flex-1 px-2 md:px-4">
+          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3" onClick={() => navigate("/")}>
+            <Home size={22} />
+            <span className="hidden md:inline">Home</span>
+          </Button>
+          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3">
+            <Search size={22} />
+            <span className="hidden md:inline">Search</span>
+          </Button>
+          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3 bg-white/10" onClick={() => navigate("/feed")}>
+            <Users size={22} />
+            <span className="hidden md:inline">Feed</span>
+          </Button>
+          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3" onClick={() => navigate("/dashboard")}>
+            <TrendingUp size={22} />
+            <span className="hidden md:inline">Invest</span>
+          </Button>
+          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3">
+            <User size={22} />
+            <span className="hidden md:inline">Profile</span>
+          </Button>
+        </div>
+        
+        <div className="px-2 md:px-4 mt-auto">
+          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3">
+            <Bell size={22} />
+            <span className="hidden md:inline">Notifications</span>
+            <span className="w-5 h-5 rounded-full bg-accent text-xs flex items-center justify-center ml-auto">3</span>
+          </Button>
+        </div>
+      </div>
+      
+      {/* Main content */}
+      <div className="ml-16 md:ml-64 flex-1">
+        {/* Top header */}
+        <header className="sticky top-0 z-30 glass border-b border-white/10 py-3">
+          <div className="container max-w-4xl mx-auto px-4 flex items-center justify-between">
+            <h2 className="text-xl font-bold">Your Feed</h2>
+            <Button size="icon" variant="ghost" className="rounded-full">
+              <Bell size={20} />
+            </Button>
+          </div>
+        </header>
+
+      {/* Stories row */}
+      <div className="container max-w-4xl mx-auto px-4 mt-6 overflow-x-auto">
+        <div className="flex gap-4 pb-2">
+          {stories.map((story) => (
+            <div key={story.id} className="flex flex-col items-center">
+              <div className={`w-12 h-12 rounded-full p-[2px] ${story.hasNew ? 'bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600' : 'bg-gray-700'}`}>
+                <div className="w-full h-full rounded-full overflow-hidden glass">
+                  <img 
+                    src={story.avatar} 
+                    alt={story.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+              <span className="text-[10px] mt-1 truncate w-12 text-center">{story.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Feed content */}
+      <div className="container max-w-4xl mx-auto px-4 py-6 space-y-4">
+        {posts.map((post) => (
+          <div key={post.id} className="glass-card rounded-xl overflow-hidden max-h-[500px]">
+            {/* Post header */}
+            <div className="p-2 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Avatar 
+                  className="cursor-pointer" 
+                  onClick={() => navigate(`/creator/${post.creator.id}`)}
+                >
+                  <img 
+                    src={post.creator.avatar} 
+                    alt={post.creator.name}
+                    className="w-full h-full object-cover" 
+                  />
+                </Avatar>
+                <div 
+                  className="cursor-pointer" 
+                  onClick={() => navigate(`/creator/${post.creator.id}`)}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold">{post.creator.name}</span>
+                    {post.creator.verified && (
+                      <span className="text-blue-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground">{post.creator.handle}</div>
+                </div>
+              </div>
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-1 text-sm">
+                  <DollarSign size={14} className={post.creator.priceChange >= 0 ? "text-green-400" : "text-red-400"} />
+                  <span className="font-medium">${post.creator.stockPrice.toFixed(2)}</span>
+                  <span className={post.creator.priceChange >= 0 ? "text-green-400" : "text-red-400"}>
+                    {post.creator.priceChange >= 0 ? "+" : ""}{post.creator.priceChange}%
+                  </span>
+                </div>
+                <Button 
+                  size="sm" 
+                  className="mt-1 glass-button bg-white text-black hover:bg-white/90"
+                  onClick={() => openInvestModal(post.creator)}
+                >
+                  Invest
+                </Button>
+              </div>
+            </div>
+
+            {/* Post content */}
+            <div>
+              <p className="px-4 pb-2 text-sm line-clamp-2">{post.content}</p>
+              <div className="aspect-[16/10] w-full bg-gray-800">
+                <img 
+                  src={post.image} 
+                  alt="Post content" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Post stats */}
+            <div className="p-2 space-y-2">
+              <div className="flex justify-between">
+                <div className="flex gap-4">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex items-center gap-1 p-0"
+                    onClick={() => handleLike(post.id)}
+                  >
+                    <Heart 
+                      size={20} 
+                      className={post.isLiked ? "fill-red-500 text-red-500" : ""} 
+                    />
+                    <span>{formatCompactNumber(post.likes)}</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex items-center gap-1 p-0"
+                  >
+                    <MessageCircle size={20} />
+                    <span>{formatCompactNumber(post.comments)}</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex items-center gap-1 p-0"
+                  >
+                    <Share2 size={20} />
+                  </Button>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-0"
+                  onClick={() => handleBookmark(post.id)}
+                >
+                  <Bookmark 
+                    size={20} 
+                    className={post.isBookmarked ? "fill-white" : ""} 
+                  />
+                </Button>
+              </div>
+
+              <div className="glass p-2 rounded-lg text-xs">
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm">Creator Stats</span>
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    className="h-auto p-0"
+                    onClick={() => navigate(`/creator/${post.creator.id}`)}
+                  >
+                    View Profile
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-1">
+                    <Users size={14} />
+                    <span>{formatCompactNumber(post.creator.followers)} followers</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <TrendingUp size={14} />
+                    <span>{formatCompactNumber(post.creator.investors)} investors</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-[10px] text-muted-foreground">{post.timePosted} ago</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      </div>
+
+      {/* Investment Dialog */}
+      <Dialog open={showInvestModal} onOpenChange={setShowInvestModal}>
+        <DialogContent className="glass-card sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invest in {selectedCreator?.name}</DialogTitle>
+            <DialogDescription>
+              Support this creator by purchasing their creator tokens.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedCreator && (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="w-16 h-16">
+                  <img 
+                    src={selectedCreator.avatar} 
+                    alt={selectedCreator.name}
+                    className="w-full h-full object-cover" 
+                  />
+                </Avatar>
+                <div>
+                  <div className="font-semibold text-lg">{selectedCreator.name}</div>
+                  <div className="text-sm text-muted-foreground">{selectedCreator.handle}</div>
+                </div>
+              </div>
+              
+              <div className="glass p-4 rounded-lg space-y-4">
+                <div className="flex justify-between">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Current Price</div>
+                    <div className="text-2xl font-bold">${selectedCreator.stockPrice.toFixed(2)}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-muted-foreground">Price Change (24h)</div>
+                    <div className={`text-xl font-bold ${selectedCreator.priceChange >= 0 ? "text-green-400" : "text-red-400"}`}>
+                      {selectedCreator.priceChange >= 0 ? "+" : ""}{selectedCreator.priceChange}%
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <label className="text-sm text-muted-foreground">Investment Amount (tokens)</label>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="icon" 
+                        variant="outline" 
+                        className="h-7 w-7" 
+                        onClick={() => setInvestmentAmount(Math.max(10, investmentAmount - 10))}
+                      >
+                        <ChevronDown size={14} />
+                      </Button>
+                      <span className="w-10 text-center">{investmentAmount}</span>
+                      <Button 
+                        size="icon" 
+                        variant="outline" 
+                        className="h-7 w-7" 
+                        onClick={() => setInvestmentAmount(investmentAmount + 10)}
+                      >
+                        <ChevronUp size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                  <Slider 
+                    value={[investmentAmount]} 
+                    min={10} 
+                    max={500} 
+                    step={10}
+                    onValueChange={([value]) => setInvestmentAmount(value)} 
+                    className="my-6" 
+                  />
+                  <div className="flex justify-between text-sm">
+                    <span>Min: 10</span>
+                    <span>Max: 500</span>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">Cost</span>
+                    <span>${(investmentAmount * selectedCreator.stockPrice).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">Potential ROI (1yr)</span>
+                    <span className="text-green-400">+{Math.round(selectedCreator.priceChange * 6)}%</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Tokens Received</span>
+                    <span>{investmentAmount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowInvestModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              className="glass-button bg-white text-black hover:bg-white/90"
+              onClick={handleInvest}
+            >
+              Confirm Investment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Feed;
