@@ -201,7 +201,7 @@ const Feed = () => {
           </Button>
           <Button variant="ghost" className="w-full justify-center md:justify-start gap-3">
             <User size={22} />
-            <span className="hidden md:inline">Profile</span>
+            <span className="hidden md:inline">Sign Out</span>
           </Button>
         </div>
         

@@ -14,11 +14,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronRight, User2, AtSign } from "lucide-react";
 import { toast } from "sonner";
 import ImageUploader from "@/components/ImageUploader";
-import { useAuth } from "@/contexts/AuthContext";
 
 const UserSignup = () => {
   const navigate = useNavigate();
-  const { signUp, signIn, loading } = useAuth();
   const [signupStep, setSignupStep] = useState(1);
   const [activeTab, setActiveTab] = useState("signup");
   
@@ -36,57 +34,28 @@ const UserSignup = () => {
   // User interests (for content recommendations)
   const [interests, setInterests] = useState<string[]>([]);
   
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      // Get the email/username and password from the form
-      const formElement = e.target as HTMLFormElement;
-      const emailInput = formElement.elements.namedItem('username') as HTMLInputElement;
-      const passwordInput = formElement.elements.namedItem('password') as HTMLInputElement;
-      
-      if (!emailInput?.value || !passwordInput?.value) {
-        toast.error('Please enter both email and password');
-        return;
-      }
-      
-      await signIn(emailInput.value, passwordInput.value);
-      navigate('/feed');
-    } catch (error) {
-      // Error is already handled in the auth context
-    }
+    toast.success("Login successful!");
+    navigate("/feed");
   };
   
-  const  handleNextStep = async (e: React.FormEvent) => {
+  const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validation for each step
     if (signupStep === 1 && (!username || !password || !email)) {
       toast.error("Please fill in all required fields");
       return;
     }
     
-    if (signupStep === 1 && password.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
-    
-    if (signupStep === 2) {
-      // Register the user with Supabase
-      const { data, error } = await signUp(email, password, {
-        username,
-        name: fullName || username,
-        bio,
-        role: 'fan',
-        profile_image_url: null // In a real app, you'd upload this to storage first
-      });
-      if (error) {
-        // Error is handled in auth context
-        return;
-      }
+    if (signupStep < 3) {
+      setSignupStep(signupStep + 1);
+    } else {
+      // Final submission
+      toast.success("Account created successfully!");
       navigate("/feed");
-      return;
     }
-    
-    setSignupStep(signupStep + 1);
   };
   
   const handlePreviousStep = () => {
@@ -167,7 +136,7 @@ const UserSignup = () => {
       <FloatingOrbs />
       
       <div className="w-full max-w-2xl glass-card p-8 shadow-xl animate-blur-in relative z-10 glow-border light-reflection">
-        <h1 className="text-3xl font-bold text-center mb-6 animate-scale-pulse">Join CreatorStake</h1>
+        <h1 className="text-3xl font-bold text-center mb-6 animate-scale-pulse">Join Starvest</h1>
         
         <Tabs 
           defaultValue="signup" 
@@ -228,9 +197,8 @@ const UserSignup = () => {
               <Button 
                 type="submit" 
                 className="w-full glass-button bg-white text-black hover:bg-white/90 transition-all duration-300 hover:scale-105"
-                disabled={loading}
               >
-                {loading ? 'Signing In...' : 'Sign In'}
+                Sign In
               </Button>
 
               <div className="text-center text-sm text-muted-foreground">
@@ -248,13 +216,14 @@ const UserSignup = () => {
               <form onSubmit={handleNextStep} className="space-y-6 animate-reveal">
                 <div className="space-y-2 animate-reveal-delay-100">
                   <Label htmlFor="signup-username">Choose Username *</Label>
-                  <div>
+                  <div className="relative">
+                    <AtSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
                       id="signup-username" 
-                      className="glass-input" 
+                      className="glass-input pl-10" 
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="@your_username"
+                      placeholder="Your unique username"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">This will be your @handle on the platform</p>
