@@ -83,7 +83,7 @@ export const Hero = () => {
           <Button 
             size="lg" 
             className="gap-2 shadow-glow glass-button bg-white text-white hover:bg-white/90 hover:text-black transition-all duration-300 hover:scale-105"
-            onClick={() => window.location.href = "/login"}
+            onClick={() => window.location.href = "/signup"}
           >
             Start Discovering
             <ArrowRight className="w-4 h-4" />
