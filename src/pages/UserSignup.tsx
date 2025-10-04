@@ -14,11 +14,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronRight, User2, AtSign } from "lucide-react";
 import { toast } from "sonner";
 import ImageUploader from "@/components/ImageUploader";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth0Context } from "@/contexts/Auth0Context";
 
 const UserSignup = () => {
   const navigate = useNavigate();
-  const { signUp, signIn, loading } = useAuth();
+  const { loginWithRedirect, isLoading } = useAuth0Context();
   const [signupStep, setSignupStep] = useState(1);
   const [activeTab, setActiveTab] = useState("signup");
   
@@ -38,55 +38,12 @@ const UserSignup = () => {
   
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      // Get the email/username and password from the form
-      const formElement = e.target as HTMLFormElement;
-      const emailInput = formElement.elements.namedItem('username') as HTMLInputElement;
-      const passwordInput = formElement.elements.namedItem('password') as HTMLInputElement;
-      
-      if (!emailInput?.value || !passwordInput?.value) {
-        toast.error('Please enter both email and password');
-        return;
-      }
-      
-      await signIn(emailInput.value, passwordInput.value);
-      navigate('/feed');
-    } catch (error) {
-      // Error is already handled in the auth context
-    }
+    toast.info('Please use Auth0 for login. Traditional login is not available.');
   };
   
-  const  handleNextStep = async (e: React.FormEvent) => {
+  const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (signupStep === 1 && (!username || !password || !email)) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-    
-    if (signupStep === 1 && password.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
-    
-    if (signupStep === 2) {
-      // Register the user with Supabase
-      const { data, error } = await signUp(email, password, {
-        username,
-        name: fullName || username,
-        bio,
-        role: 'fan',
-        profile_image_url: null // In a real app, you'd upload this to storage first
-      });
-      if (error) {
-        // Error is handled in auth context
-        return;
-      }
-      navigate("/feed");
-      return;
-    }
-    
-    setSignupStep(signupStep + 1);
+    toast.info('Please use Auth0 for signup. Traditional signup is not available.');
   };
   
   const handlePreviousStep = () => {
@@ -225,13 +182,29 @@ const UserSignup = () => {
                 </a>
               </div>
               
-              <Button 
-                type="submit" 
-                className="w-full glass-button bg-white text-black hover:bg-white/90 transition-all duration-300 hover:scale-105"
-                disabled={loading}
-              >
-                {loading ? 'Signing In...' : 'Sign In'}
-              </Button>
+                <Button 
+                  type="submit" 
+                  className="w-full glass-button bg-white text-black hover:bg-white/90 transition-all duration-300 hover:scale-105"
+                >
+                  Sign In
+                </Button>
+
+                {/* Divider */}
+                <div className="flex items-center my-4">
+                  <div className="flex-1 border-t border-white/20"></div>
+                  <span className="px-3 text-sm text-muted-foreground">OR</span>
+                  <div className="flex-1 border-t border-white/20"></div>
+                </div>
+
+                {/* Auth0 Social Login */}
+                <Button 
+                  type="button"
+                  onClick={loginWithRedirect}
+                  className="w-full glass-button bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 hover:scale-105"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Connecting...' : 'Sign In with Auth0'}
+                </Button>
 
               <div className="text-center text-sm text-muted-foreground">
                 Are you a creator? <a href="/creator-signup" className="text-accent hover:underline">Sign up as creator</a>
@@ -291,6 +264,24 @@ const UserSignup = () => {
                     className="w-full glass-button bg-white text-black hover:bg-white/90 transition-all duration-300 hover:scale-105"
                   >
                     Continue
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+
+                  {/* Divider */}
+                  <div className="flex items-center my-4">
+                    <div className="flex-1 border-t border-white/20"></div>
+                    <span className="px-3 text-sm text-muted-foreground">OR</span>
+                    <div className="flex-1 border-t border-white/20"></div>
+                  </div>
+
+                  {/* Auth0 Social Signup */}
+                  <Button 
+                    type="button"
+                    onClick={loginWithRedirect}
+                    className="w-full glass-button bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 hover:scale-105"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Connecting...' : 'Sign Up with Auth0'}
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
 
