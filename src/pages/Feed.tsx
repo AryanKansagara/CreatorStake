@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { createClient } from '@supabase/supabase-js';
 import {
   Heart,
   MessageCircle,
@@ -48,8 +49,36 @@ interface Post {
   timePosted: string;
 }
 
+// Initialize Supabase client
+const supabaseUrl = 'https://yyyfpcriefcurnosdmdv.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eWZwY3JpZWZjdXJub3NkbWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NDc4NjYsImV4cCI6MjA3NTEyMzg2Nn0.kp3jGsec1NrTeTUpRjPuCEV2p6IXjsyKOaIPYC6S8ug';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 const Feed = () => {
   const navigate = useNavigate();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  
+  // Sign out function using Supabase
+  const signOut = async () => {
+    try {
+      setIsSigningOut(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast.error("Error signing out: " + error.message);
+        console.error("Sign out error:", error);
+      } else {
+        toast.success("Signed out successfully");
+        navigate('/login');
+      }
+    } catch (error: any) {
+      console.error("Sign out failed:", error);
+      toast.error("Failed to sign out: " + (error.message || "Unknown error"));
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+  
   const [posts, setPosts] = useState<Post[]>([
     {
       id: "1",
@@ -199,9 +228,16 @@ const Feed = () => {
             <TrendingUp size={22} />
             <span className="hidden md:inline">Invest</span>
           </Button>
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-center md:justify-start gap-3" 
+            onClick={() => signOut()}
+            disabled={isSigningOut}
+          >
             <User size={22} />
-            <span className="hidden md:inline">Sign Out</span>
+            <span className="hidden md:inline">
+              {isSigningOut ? "Signing Out..." : "Sign Out"}
+            </span>
           </Button>
         </div>
         
