@@ -54,7 +54,7 @@ The API keys will be in ```.env``` or ```env.example``` or ```env.local```
 
 ```npm run dev```
 
-##💡 Future Roadmap
+## 💡Future Roadmap
 
 🪙 On-chain tokenization of creator investments (smart contracts).
 🔮 Add historical trend tracking with Gemini’s multi-turn reasoning.
