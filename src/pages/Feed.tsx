@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth0Context } from "@/contexts/Auth0Context";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@supabase/supabase-js";
+
+import { auth0Config } from "@/config/auth0";
+import { createClient } from '@supabase/supabase-js';
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
@@ -105,21 +108,75 @@ const formatCompactNumber = (num: number): string => {
 /* ---------- Component ---------- */
 const Feed = () => {
   const navigate = useNavigate();
+  const { user: auth0User, isAuthenticated: isAuth0Authenticated, logout } = useAuth0Context();
+  const { user: supabaseUser, session } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [showAdvisor, setShowAdvisor] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   // Invest modal
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   const [investmentAmount, setInvestmentAmount] = useState(100);
+  const [currentUser, setCurrentUser] = useState<DbUser | null>(null);
+  
+  // Check if user exists in Supabase based on Auth0 email
+  useEffect(() => {
+    const checkUser = async () => {
+      // If we have a Supabase session directly, we're good to proceed
+      if (session) {
+        console.log('User authenticated with Supabase:', supabaseUser);
+        return;
+      }
+      
+      // If authenticated with Auth0, check if user exists in Supabase
+      if (isAuth0Authenticated && auth0User?.email) {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', auth0User.email)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching user:', error);
+            // If user doesn't exist, redirect to signup to complete profile
+            navigate('/signup');
+            return;
+          }
+          
+          if (data) {
+            setCurrentUser(data);
+          }
+        } catch (err) {
+          console.error('Error in user check:', err);
+          navigate('/signup');
+        }
+      } else if (!isAuth0Authenticated && !session) {
+        // No session in either Auth0 or Supabase, redirect to login
+        console.log('No authentication found, redirecting to login');
+        navigate('/login');
+        return;
+      }
+    };
+    
+    checkUser();
+  }, [isAuth0Authenticated, auth0User, navigate, session, supabaseUser]);
 
-  /* ---------- Data ---------- */
+  // Debug authentication state
+  useEffect(() => {
+    console.log('Auth0 Authentication State:', { isAuth0Authenticated, auth0User });
+    console.log('Supabase Authentication State:', { session, supabaseUser });
+  }, [isAuth0Authenticated, auth0User, session, supabaseUser]);
+
+  // Fetch data from Supabase
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      console.log('Fetching feed data...');
       try {
         const { data: creatorsData, error: creatorsError } = await supabase
           .from("creators")
@@ -232,29 +289,70 @@ const Feed = () => {
 
   /* ---------- States ---------- */
   
-  // Sign out function using Supabase
+  // Sign out function handling both Auth0 and Supabase
   const signOut = async () => {
     try {
       setIsSigningOut(true);
-      const { error } = await supabase.auth.signOut();
       
-      if (error) {
-        toast.error("Error signing out: " + error.message);
-        console.error("Sign out error:", error);
-      } else {
-        toast.success("Signed out successfully");
-        navigate('/signup');
+      // Handle Auth0 logout if authenticated with Auth0
+      if (isAuth0Authenticated) {
+        console.log('Logging out from Auth0...');
+        // Use Auth0 logout with logoutParams parameter
+        logout({
+          logoutParams: {
+            returnTo: window.location.origin + '/login'
+          }
+        });
+        return; // Auth0 logout will handle the redirect
       }
+      
+      // Handle Supabase logout if authenticated with Supabase
+      if (session) {
+        console.log('Logging out from Supabase...');
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          throw error;
+        }
+      }
+      
+      // If we reach here, redirect to login
+      toast.success("Signed out successfully");
+      navigate('/login');
     } catch (error: any) {
       console.error("Sign out error:", error);
       toast.error("Failed to sign out: " + (error.message || "Unknown error"));
+      navigate('/login'); // Redirect even if there's an error
     } finally {
       setIsSigningOut(false);
     }
   };
 
+  // Check if user has valid authentication
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authValid, setAuthValid] = useState(false);
+
+  useEffect(() => {
+    const validateAuth = async () => {
+      // Wait a moment for auth state to stabilize
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Auth is valid if either we have a supabase session or Auth0 auth + corresponding supabase user
+      const isValid = !!session || (isAuth0Authenticated && !!currentUser);
+      console.log('Auth validation result:', isValid);
+      setAuthValid(isValid);
+      setAuthChecked(true);
+      
+      if (!isValid && authChecked) {
+        console.log('Redirecting to login due to invalid auth');
+        navigate('/login');
+      }
+    };
+
+    validateAuth();
+  }, [session, isAuth0Authenticated, currentUser, authChecked, navigate]);
+
   // Loading state
-  if (loading) {
+  if (loading || !authChecked) {
     return (
       <div className="min-h-screen bg-gradient-hero grid place-items-center">
         <div className="glass-card rounded-2xl p-8 flex items-center gap-3">
