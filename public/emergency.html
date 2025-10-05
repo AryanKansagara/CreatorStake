@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starvest - Emergency Mode</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #080808;
+      color: #e0e0e0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      background-color: rgba(30, 30, 30, 0.8);
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    h1 {
+      margin-top: 0;
+      color: #60a5fa;
+    }
+    .button {
+      display: inline-block;
+      background-color: #3b82f6;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      margin: 10px 0;
+      transition: all 0.2s;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #2563eb;
+      transform: translateY(-2px);
+    }
+    .warning {
+      background-color: rgba(220, 38, 38, 0.1);
+      color: #f87171;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 20px;
+      border-left: 4px solid #f87171;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Starvest - Emergency Access</h1>
+    <p>If you're experiencing issues with the main application, you can use one of these links to access the site with various features disabled:</p>
+    
+    <div>
+      <a href="/?skipAI=true" class="button">Basic Mode (No AI)</a>
+    </div>
+    
+    <div class="warning">
+      <p><strong>Note:</strong> These modes disable certain features to ensure the application functions properly. Some advanced features may be unavailable.</p>
+    </div>
+  </div>
+</body>
+</html>

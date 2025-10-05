@@ -1,15 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateAIResponse } from './watsonx';
 
 // Initialize Supabase client
 const supabaseUrl = 'https://yyyfpcriefcurnosdmdv.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eWZwY3JpZWZjdXJub3NkbWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NDc4NjYsImV4cCI6MjA3NTEyMzg2Nn0.kp3jGsec1NrTeTUpRjPuCEV2p6IXjsyKOaIPYC6S8ug';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Initialize Gemini API
-const API_KEY = 'AIzaSyDB8V6a9ocdHorGnXi0a_QVuZuXeqCl6Bs';
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 // Types
 interface Creator {
@@ -74,7 +70,7 @@ export async function analyzeInvestmentOpportunities(query: string): Promise<str
       bio: creator.user?.profile_bio || 'No bio available'
     }));
     
-    // Prepare prompt for Gemini
+    // Prepare prompt for Watson X
     const prompt = `
       You are an investment advisor for a social media creator investment platform called Starvest.
       Users can invest in creators and earn returns based on the creator's success.
@@ -91,14 +87,12 @@ export async function analyzeInvestmentOpportunities(query: string): Promise<str
       Respond in a conversational but professional tone, offering specific recommendations with brief explanations.
       Limit your response to 3 top creator recommendations maximum.
 
-      Note I dont want to see those ** infront of names and ** infront of stocks and even before any name just put the name there normally, because all the 
-      ** are making the response look bad and not professional.
+      Note: Avoid using special formatting characters like asterisks. Present names and values in plain text.
     `;
     
-    // Send to Gemini for analysis
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text().trim();
+    // Send to AI for analysis (Watson X with Gemini fallback)
+    const response = await generateAIResponse(prompt);
+    return response;
   } catch (error) {
     console.error('Error analyzing investment opportunities:', error);
     return "I'm having trouble analyzing investment opportunities at the moment. Please try again later.";
@@ -121,7 +115,7 @@ export async function processInvestmentQuery(query: string): Promise<string> {
     // Handle general questions about the platform
     if (query.toLowerCase().includes('how does') && 
         (query.toLowerCase().includes('work') || query.toLowerCase().includes('platform'))) {
-      return "Creator stacke allows you to invest in promising social media creators. You can buy creator tokens that increase in value as the creator grows in popularity. The platform uses sentiment analysis to help identify promising investment opportunities.";
+      return "Creator stake allows you to invest in promising social media creators. You can buy creator tokens that increase in value as the creator grows in popularity. The platform uses sentiment analysis to help identify promising investment opportunities.";
     }
     
     // Default response for other queries
