@@ -1,5 +1,5 @@
 // Eleven Labs API integration for text-to-speech and speech-to-text
-const API_KEY = 'sk_ab03de045508af54af519e9e6ad913c06ee3ea53dfb9a27b';
+const API_KEY = 'sk_c94ba04f6ae75394703767603a16ba2b8cb0f902e126b950';
 const API_URL = 'https://api.elevenlabs.io/v1';
 
 // Voice IDs - you can change these to your preferred voices
