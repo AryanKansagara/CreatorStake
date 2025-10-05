@@ -56,10 +56,10 @@ The API keys will be in ```.env``` or ```env.example``` or ```env.local```
 
 ## 💡Future Roadmap
 
-🪙 On-chain tokenization of creator investments (smart contracts).
-🔮 Add historical trend tracking with Gemini’s multi-turn reasoning.
-📊 Real-time social API integrations (YouTube, TikTok, X).
-🧬 Personalized fan recommendations via Watson Assistant.
+- 🪙 On-chain tokenization of creator investments (smart contracts).
+- 🔮 Add historical trend tracking with Gemini’s multi-turn reasoning.
+- 📊 Real-time social API integrations (YouTube, TikTok, X).
+- 🧬 Personalized fan recommendations via Watson Assistant.
 
 ## Website
 <a href="https://www.creatorstake.biz/">CreatorStake
