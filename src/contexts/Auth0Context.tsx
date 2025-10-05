@@ -1,12 +1,12 @@
 import { createContext, useContext, ReactNode } from 'react';
-import { useAuth0, User } from '@auth0/auth0-react';
+import { useAuth0, User, LogoutOptions } from '@auth0/auth0-react';
 
 interface Auth0ContextProps {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   loginWithRedirect: () => void;
-  logout: () => void;
+  logout: (options?: LogoutOptions) => void;
 }
 
 const Auth0Context = createContext<Auth0ContextProps | undefined>(undefined);

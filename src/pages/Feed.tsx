@@ -1,32 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useAuth0Context } from "@/contexts/Auth0Context";
+import { useAuth } from "@/contexts/AuthContext";
+import { auth0Config } from "@/config/auth0";
 import { createClient } from '@supabase/supabase-js';
+import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Navigation } from "@/components/Navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import InvestmentAdvisor from "@/components/InvestmentAdvisor";
 import {
-  Heart,
-  MessageCircle,
-  Share2,
-  Bookmark,
-  DollarSign,
-  ChevronUp,
-  ChevronDown,
-  TrendingUp,
-  Users,
-  Search,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
+import {
   Bell,
   Home,
-  User
+  Search,
+  TrendingUp,
+  User,
+  Users,
+  Heart,
+  MessageCircle,
+  MessageSquare,
+  Bookmark,
+  Share2,
+  MoreVertical,
+  DollarSign,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { toast } from "sonner";
 
+// Initialize Supabase client
+const supabaseUrl = 'https://yyyfpcriefcurnosdmdv.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eWZwY3JpZWZjdXJub3NkbWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NDc4NjYsImV4cCI6MjA3NTEyMzg2Nn0.kp3jGsec1NrTeTUpRjPuCEV2p6IXjsyKOaIPYC6S8ug';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 // Define types
+interface DbCreator {
+  id: string;
+  user_id: string;
+  current_stock_price: number;
+  followers_count: number;
+  created_at: string;
+  intro_video_url?: string;
+  sample_post_url?: string;
+}
+
+interface DbUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'creator' | 'fan';
+  profile_bio: string | null;
+  profile_image_url: string | null;
+  wallet_balance: number;
+  created_at: string;
+}
+
+interface DbPost {
+  id: string;
+  creator_id: string;
+  content: string;
+  image_url: string | null;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+}
+
 interface Creator {
   id: string;
+  userId: string; // Added userId for navigation to creator profile
   name: string;
   handle: string;
   avatar: string;
@@ -49,114 +99,277 @@ interface Post {
   timePosted: string;
 }
 
-// Initialize Supabase client
-const supabaseUrl = 'https://yyyfpcriefcurnosdmdv.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eWZwY3JpZWZjdXJub3NkbWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NDc4NjYsImV4cCI6MjA3NTEyMzg2Nn0.kp3jGsec1NrTeTUpRjPuCEV2p6IXjsyKOaIPYC6S8ug';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+interface Story {
+  id: string;
+  name: string;
+  avatar: string;
+  hasNew: boolean;
+}
+
+// Helper function to format relative time
+const getRelativeTime = (timestamp: string): string => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return 'just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+  return `${Math.floor(diffInSeconds / 86400)}d`;
+};
 
 const Feed = () => {
   const navigate = useNavigate();
+  const { user: auth0User, isAuthenticated: isAuth0Authenticated, logout } = useAuth0Context();
+  const { user: supabaseUser, session } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [showInvestModal, setShowInvestModal] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
+  const [investmentAmount, setInvestmentAmount] = useState(100);
+  const [showAdvisor, setShowAdvisor] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<DbUser | null>(null);
   
-  // Sign out function using Supabase
+  // Check if user exists in Supabase based on Auth0 email
+  useEffect(() => {
+    const checkUser = async () => {
+      // If we have a Supabase session directly, we're good to proceed
+      if (session) {
+        console.log('User authenticated with Supabase:', supabaseUser);
+        return;
+      }
+      
+      // If authenticated with Auth0, check if user exists in Supabase
+      if (isAuth0Authenticated && auth0User?.email) {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', auth0User.email)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching user:', error);
+            // If user doesn't exist, redirect to signup to complete profile
+            navigate('/signup');
+            return;
+          }
+          
+          if (data) {
+            setCurrentUser(data);
+          }
+        } catch (err) {
+          console.error('Error in user check:', err);
+          navigate('/signup');
+        }
+      } else if (!isAuth0Authenticated && !session) {
+        // No session in either Auth0 or Supabase, redirect to login
+        console.log('No authentication found, redirecting to login');
+        navigate('/login');
+        return;
+      }
+    };
+    
+    checkUser();
+  }, [isAuth0Authenticated, auth0User, navigate, session, supabaseUser]);
+
+  // Debug authentication state
+  useEffect(() => {
+    console.log('Auth0 Authentication State:', { isAuth0Authenticated, auth0User });
+    console.log('Supabase Authentication State:', { session, supabaseUser });
+  }, [isAuth0Authenticated, auth0User, session, supabaseUser]);
+
+  // Fetch data from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      console.log('Fetching feed data...');
+      try {
+        // Fetch creators with their users
+        const { data: creatorsData, error: creatorsError } = await supabase
+          .from('creators')
+          .select(`
+            *,
+            users:user_id(*)
+          `);
+
+        if (creatorsError) throw creatorsError;
+        
+        // Fetch posts with their creators
+        const { data: postsData, error: postsError } = await supabase
+          .from('posts')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (postsError) throw postsError;
+        
+        console.log('Creators from DB:', creatorsData);
+        console.log('Posts from DB:', postsData);
+        
+        // Format creators data
+        const formattedCreators: Record<string, Creator> = {};
+        creatorsData.forEach((creator: any) => {
+          const userName = creator.users?.name || 'Unknown Creator';
+          const handle = `@${userName.toLowerCase().replace(/\s+/g, '')}`;
+          
+          formattedCreators[creator.id] = {
+            id: creator.id,
+            userId: creator.user_id, // Store user_id to use for navigation
+            name: userName,
+            handle: handle,
+            avatar: creator.users?.profile_image_url || '/user1.jpg',
+            verified: Math.random() > 0.5, // Random for now
+            stockPrice: creator.current_stock_price || 1.0,
+            priceChange: parseFloat(((Math.random() * 20) - 5).toFixed(1)), // Random for now
+            followers: creator.followers_count || 0,
+            investors: Math.floor((creator.followers_count || 0) / 8), // Estimated
+          };
+        });
+        
+        // Format posts data
+        const formattedPosts = postsData.map((post: DbPost) => {
+          const creator = formattedCreators[post.creator_id];
+          if (!creator) return null;
+          
+          return {
+            id: post.id,
+            creator,
+            content: post.content,
+            image: post.image_url || '/user1.jpg',
+            likes: post.likes_count,
+            comments: post.comments_count,
+            isLiked: Math.random() > 0.5, // Random for demo
+            isBookmarked: Math.random() > 0.7, // Random for demo
+            timePosted: getRelativeTime(post.created_at),
+          };
+        }).filter(Boolean) as Post[];
+        
+        // Create stories from creators
+        const formattedStories = Object.values(formattedCreators).map(creator => ({
+          id: creator.id,
+          name: creator.handle.substring(1), // Remove @ prefix
+          avatar: creator.avatar,
+          hasNew: Math.random() > 0.3, // Random for demo
+        }));
+        
+        // Add some generic stories if needed
+        const genericStoryNames = ['minhhgoc', 'aidan_du', 'emmaa.w', 'seyisexual', 'mrr_rxx', 'bayou_b.o.a'];
+        const additionalStories = genericStoryNames.map((name, idx) => ({
+          id: `generic-${idx}`,
+          name,
+          avatar: `/user${(idx % 3) + 1}.jpg`,
+          hasNew: Math.random() > 0.3,
+        }));
+        
+        setPosts(formattedPosts);
+        setStories([...formattedStories, ...additionalStories]);
+      } catch (err: any) {
+        console.error('Error fetching data:', err);
+        setError(err.message);
+        toast.error('Failed to load feed data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Sign out function handling both Auth0 and Supabase
   const signOut = async () => {
     try {
       setIsSigningOut(true);
-      const { error } = await supabase.auth.signOut();
       
-      if (error) {
-        toast.error("Error signing out: " + error.message);
-        console.error("Sign out error:", error);
-      } else {
-        toast.success("Signed out successfully");
-        navigate('/login');
+      // Handle Auth0 logout if authenticated with Auth0
+      if (isAuth0Authenticated) {
+        console.log('Logging out from Auth0...');
+        // Use Auth0 logout with logoutParams parameter
+        logout({
+          logoutParams: {
+            returnTo: window.location.origin + '/login'
+          }
+        });
+        return; // Auth0 logout will handle the redirect
       }
+      
+      // Handle Supabase logout if authenticated with Supabase
+      if (session) {
+        console.log('Logging out from Supabase...');
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          throw error;
+        }
+      }
+      
+      // If we reach here, redirect to login
+      toast.success("Signed out successfully");
+      navigate('/login');
     } catch (error: any) {
-      console.error("Sign out failed:", error);
+      console.error("Sign out error:", error);
       toast.error("Failed to sign out: " + (error.message || "Unknown error"));
+      navigate('/login'); // Redirect even if there's an error
     } finally {
       setIsSigningOut(false);
     }
   };
-  
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "1",
-      creator: {
-        id: "1",
-        name: "Alex Rivera",
-        handle: "@alexcreates",
-        avatar: "/user1.jpg",
-        verified: true,
-        stockPrice: 23.75,
-        priceChange: 5.2,
-        followers: 12500,
-        investors: 356
-      },
-      content: "Just dropped my new game demo! Check it out and let me know what you think. This is just the beginning of something massive. #gamedev #indiedev",
-      image: "/user5.jpg",
-      likes: 438,
-      comments: 56,
-      isLiked: false,
-      isBookmarked: false,
-      timePosted: "2h"
-    },
-    {
-      id: "2",
-      creator: {
-        id: "2",
-        name: "Sarah Chen",
-        handle: "@sarahstyle",
-        avatar: "/user2.jpg",
-        verified: true,
-        stockPrice: 48.32,
-        priceChange: 12.7,
-        followers: 34200,
-        investors: 890
-      },
-      content: "New sustainable fashion line dropping next month. Here's a sneak peek at what we've been working on. Ethical fashion without compromise. #sustainablefashion",
-      image: "/user3.jpg",
-      likes: 1253,
-      comments: 124,
-      isLiked: true,
-      isBookmarked: true,
-      timePosted: "5h"
-    },
-    {
-      id: "3",
-      creator: {
-        id: "3",
-        name: "Marcus Johnson",
-        handle: "@marcusmusic",
-        avatar: "/user3.jpg",
-        verified: false,
-        stockPrice: 12.85,
-        priceChange: -2.4,
-        followers: 8900,
-        investors: 215
-      },
-      content: "In the studio working on my next album. Can't wait to share what I've been creating. This one's going to change everything. #music #newalbum",
-      image: "/user2.jpg",
-      likes: 678,
-      comments: 89,
-      isLiked: false,
-      isBookmarked: false,
-      timePosted: "1d"
-    }
-  ]);
 
-  const [stories, setStories] = useState([
-    { id: "1", name: "minhhgoc", avatar: "/user1.jpg", hasNew: true },
-    { id: "2", name: "aidan_du", avatar: "/user2.jpg", hasNew: true },
-    { id: "3", name: "emmaa.w", avatar: "/user3.jpg", hasNew: true },
-    { id: "4", name: "seyisexual", avatar: "/user1.jpg", hasNew: true },
-    { id: "5", name: "mrr_rxx", avatar: "/user2.jpg", hasNew: true },
-    { id: "6", name: "bayou_b.o.a", avatar: "/user3.jpg", hasNew: true },
-  ]);
+  // Check if user has valid authentication
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authValid, setAuthValid] = useState(false);
 
-  const [showInvestModal, setShowInvestModal] = useState(false);
-  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
-  const [investmentAmount, setInvestmentAmount] = useState(100);
+  useEffect(() => {
+    const validateAuth = async () => {
+      // Wait a moment for auth state to stabilize
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Auth is valid if either we have a supabase session or Auth0 auth + corresponding supabase user
+      const isValid = !!session || (isAuth0Authenticated && !!currentUser);
+      console.log('Auth validation result:', isValid);
+      setAuthValid(isValid);
+      setAuthChecked(true);
+      
+      if (!isValid && authChecked) {
+        console.log('Redirecting to login due to invalid auth');
+        navigate('/login');
+      }
+    };
+
+    validateAuth();
+  }, [session, isAuth0Authenticated, currentUser, authChecked, navigate]);
+
+  // Loading state
+  if (loading || !authChecked) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex justify-center items-center">
+        <div className="glass-card p-8 rounded-xl">
+          <div className="flex flex-col items-center gap-4">
+            <TrendingUp className="w-10 h-10 animate-pulse text-accent" />
+            <h2 className="text-xl">Loading creator feeds...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex justify-center items-center">
+        <div className="glass-card p-8 rounded-xl">
+          <div className="flex flex-col items-center gap-4">
+            <div className="text-red-500 text-2xl">⚠️</div>
+            <h2 className="text-xl">Failed to load feed</h2>
+            <p className="text-muted-foreground">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLike = (postId: string) => {
     setPosts(posts.map(post => {
@@ -202,51 +415,8 @@ const Feed = () => {
 
   return (
     <div className="min-h-screen bg-gradient-hero flex">
-      {/* Left sidebar navigation */}
-      <div className="w-16 md:w-64 glass border-r border-white/10 fixed h-full left-0 top-0 z-40 flex flex-col py-6">
-        <div className="flex items-center justify-center md:justify-start md:px-6 mb-10">
-          <h1 className="text-xl font-bold hidden md:block">CreatorStake</h1>
-          <div className="w-10 h-10 rounded-xl glass flex items-center justify-center md:hidden">
-            <TrendingUp className="w-6 h-6 text-primary-foreground" />
-          </div>
-        </div>
-        
-        <div className="flex flex-col items-center md:items-start gap-6 flex-1 px-2 md:px-4">
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3" onClick={() => navigate("/")}>
-            <Home size={22} />
-            <span className="hidden md:inline">Home</span>
-          </Button>
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3">
-            <Search size={22} />
-            <span className="hidden md:inline">Search</span>
-          </Button>
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3 bg-white/10" onClick={() => navigate("/feed")}>
-            <Users size={22} />
-            <span className="hidden md:inline">Feed</span>
-          </Button>
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3" onClick={() => navigate("/dashboard")}>
-            <TrendingUp size={22} />
-            <span className="hidden md:inline">Invest</span>
-          </Button>
-          <Button 
-            variant="ghost" 
-            className="w-full justify-center md:justify-start gap-3" 
-            onClick={() => signOut()}
-            disabled={isSigningOut}
-          >
-            <User size={22} />
-            <span className="hidden md:inline">Sign Out</span>
-          </Button>
-        </div>
-        
-        <div className="px-2 md:px-4 mt-auto">
-          <Button variant="ghost" className="w-full justify-center md:justify-start gap-3">
-            <Bell size={22} />
-            <span className="hidden md:inline">Notifications</span>
-            <span className="w-5 h-5 rounded-full bg-accent text-xs flex items-center justify-center ml-auto">3</span>
-          </Button>
-        </div>
-      </div>
+      {/* Navigation Sidebar */}
+      <Navigation activePath="/feed" />
       
       {/* Main content */}
       <div className="ml-16 md:ml-64 flex-1">
@@ -254,9 +424,15 @@ const Feed = () => {
         <header className="sticky top-0 z-30 glass border-b border-white/10 py-3">
           <div className="container max-w-4xl mx-auto px-4 flex items-center justify-between">
             <h2 className="text-xl font-bold">Your Feed</h2>
-            <Button size="icon" variant="ghost" className="rounded-full">
-              <Bell size={20} />
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowAdvisor(true)}>
+                <TrendingUp size={16} />
+                <span className="hidden sm:inline">Investment Advisor</span>
+              </Button>
+              <Button size="icon" variant="ghost" className="rounded-full">
+                <Bell size={20} />
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -318,7 +494,7 @@ const Feed = () => {
               <div className="flex items-center gap-3">
                 <Avatar 
                   className="cursor-pointer" 
-                  onClick={() => navigate(`/creator/${post.creator.id}`)}
+                  onClick={() => navigate(`/creator/${post.creator.userId}`)}
                 >
                   <img 
                     src={post.creator.avatar} 
@@ -328,7 +504,7 @@ const Feed = () => {
                 </Avatar>
                 <div 
                   className="cursor-pointer" 
-                  onClick={() => navigate(`/creator/${post.creator.id}`)}
+                  onClick={() => navigate(`/creator/${post.creator.userId}`)}
                 >
                   <div className="flex items-center gap-1">
                     <span className="font-semibold">{post.creator.name}</span>
@@ -426,7 +602,7 @@ const Feed = () => {
                     size="sm" 
                     variant="ghost"
                     className="h-auto p-0"
-                    onClick={() => navigate(`/creator/${post.creator.id}`)}
+                    onClick={() => navigate(`/creator/${post.creator.userId}`)}
                   >
                     View Profile
                   </Button>
@@ -563,6 +739,12 @@ const Feed = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Investment Advisor */}
+      <InvestmentAdvisor 
+        isOpen={showAdvisor} 
+        onClose={() => setShowAdvisor(false)} 
+      />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Tabs,
   TabsContent,
@@ -38,8 +39,11 @@ import { toast } from "sonner";
 
 const CreatorSignup = () => {
   const navigate = useNavigate();
+  const { signUp, signIn } = useAuth();
   const [signupStep, setSignupStep] = useState(1);
   const [activeTab, setActiveTab] = useState("signup");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   // Creator basic info
   const [username, setUsername] = useState("");
@@ -68,13 +72,33 @@ const CreatorSignup = () => {
   const [targetAmount, setTargetAmount] = useState(10000);
   const [timeline, setTimeline] = useState("6 months");
   
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Login successful!");
-    navigate("/creator-dashboard");
+    
+    if (!username || !password) {
+      toast.error("Please enter your username/email and password");
+      return;
+    }
+    
+    try {
+      setIsLoggingIn(true);
+      
+      // Use the signIn function from AuthContext
+      await signIn(username, password);
+      
+      // Check if user is a creator before navigating to creator dashboard
+      // This would be better implemented with a role-based redirect in AuthContext
+      // But for now we'll just navigate to the creator dashboard
+      toast.success("Login successful!");
+      navigate("/creator-dashboard");
+    } catch (error: any) {
+      toast.error("Login failed: " + error.message);
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
   
-  const handleNextStep = (e: React.FormEvent) => {
+  const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validation for each step
@@ -97,8 +121,35 @@ const CreatorSignup = () => {
       setSignupStep(signupStep + 1);
     } else {
       // Final submission
-      toast.success("Creator account created successfully!");
-      navigate("/creator-dashboard");
+      try {
+        setIsSubmitting(true);
+        
+        // Create a userData object with all the form data
+        const userData = {
+          username: fullName,
+          email: email,
+          role: 'creator', // Explicitly set role to 'creator'
+          bio: bio,
+          contentType: contentType.join(', '), // Convert array to string
+          niche: niche,
+          goalType: goalType,
+          targetAmount: targetAmount,
+          timeline: timeline
+          // Note: Image files can't be directly passed through this flow
+          // We'll handle image uploads separately when the profile is created
+        };
+        
+        // Call the signUp function from AuthContext
+        await signUp(email, password, userData);
+        
+        // Success - navigate to the creator dashboard
+        toast.success("Creator account created successfully!");
+        navigate("/creator-dashboard");
+      } catch (error: any) {
+        toast.error("Signup failed: " + error.message);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
   
@@ -253,8 +304,9 @@ const CreatorSignup = () => {
               <Button 
                 type="submit" 
                 className="w-full glass-button bg-white text-black hover:bg-white/90 transition-all duration-300 hover:scale-105"
+                disabled={isLoggingIn}
               >
-                Sign In as Creator
+                {isLoggingIn ? 'Signing In...' : 'Sign In as Creator'}
               </Button>
             </form>
           </TabsContent>
@@ -377,6 +429,7 @@ const CreatorSignup = () => {
                       <ChevronLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
+                    
                     <Button 
                       type="button" 
                       className="flex-1 glass-button bg-white text-black hover:bg-white/90"
@@ -609,8 +662,9 @@ const CreatorSignup = () => {
                       type="button" 
                       className="flex-1 glass-button bg-white text-black hover:bg-white/90"
                       onClick={handleNextStep}
+                      disabled={isSubmitting}
                     >
-                      Complete Registration
+                      {isSubmitting ? 'Creating Account...' : 'Complete Registration'}
                     </Button>
                   </div>
                 </form>

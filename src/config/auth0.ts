@@ -4,5 +4,9 @@ export const auth0Config = {
   clientId: 'W2zB0qkVKBiZVO1btGMY8lgvpxdVKS6H',
   authorizationParams: {
     redirect_uri: window.location.origin
+  },
+  // Add logout configuration
+  logoutParams: {
+    returnTo: window.location.origin + '/login'
   }
 };
