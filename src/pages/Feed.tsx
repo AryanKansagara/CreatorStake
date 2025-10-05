@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import InvestmentAdvisor from "@/components/InvestmentAdvisor";
 import {
   Dialog,
   DialogContent,
@@ -111,13 +112,16 @@ const getRelativeTime = (timestamp: string): string => {
   
   if (diffInSeconds < 60) return 'just now';
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
   return `${Math.floor(diffInSeconds / 86400)}d`;
 };
 
 const Feed = () => {
   const navigate = useNavigate();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [showInvestModal, setShowInvestModal] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
+  const [investmentAmount, setInvestmentAmount] = useState(100);
+  const [showAdvisor, setShowAdvisor] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,17 +236,13 @@ const Feed = () => {
         navigate('/signup');
       }
     } catch (error: any) {
-      console.error("Sign out failed:", error);
+      console.error("Sign out error:", error);
       toast.error("Failed to sign out: " + (error.message || "Unknown error"));
     } finally {
       setIsSigningOut(false);
     }
   };
 
-  const [showInvestModal, setShowInvestModal] = useState(false);
-  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
-  const [investmentAmount, setInvestmentAmount] = useState(100);
-  
   // Loading state
   if (loading) {
     return (
@@ -328,9 +328,15 @@ const Feed = () => {
         <header className="sticky top-0 z-30 glass border-b border-white/10 py-3">
           <div className="container max-w-4xl mx-auto px-4 flex items-center justify-between">
             <h2 className="text-xl font-bold">Your Feed</h2>
-            <Button size="icon" variant="ghost" className="rounded-full">
-              <Bell size={20} />
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowAdvisor(true)}>
+                <TrendingUp size={16} />
+                <span className="hidden sm:inline">Investment Advisor</span>
+              </Button>
+              <Button size="icon" variant="ghost" className="rounded-full">
+                <Bell size={20} />
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -637,6 +643,12 @@ const Feed = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Investment Advisor */}
+      <InvestmentAdvisor 
+        isOpen={showAdvisor} 
+        onClose={() => setShowAdvisor(false)} 
+      />
     </div>
   );
 };
