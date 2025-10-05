@@ -1,14 +1,48 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, TrendingUp, Users, Coins } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuth0Context } from "@/contexts/Auth0Context";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 export const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const { user, isAuthenticated } = useAuth0Context();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(timer);
   }, []);
+  
+  // Handle discover button click
+  const handleDiscoverClick = async () => {
+    if (isAuthenticated && user?.email) {
+      // User is authenticated with Auth0, check if they exist in Supabase
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', user.email)
+          .single();
+        
+        if (data) {
+          // User exists in Supabase, navigate to feed
+          navigate('/feed');
+        } else {
+          // User authenticated with Auth0 but not in Supabase yet
+          // Redirect to signup to complete profile
+          navigate('/signup');
+        }
+      } catch (error) {
+        console.error('Error checking user in Supabase:', error);
+        navigate('/signup');
+      }
+    } else {
+      // Not authenticated, go to signup
+      navigate('/signup');
+    }
+  };
 
   // Random floating particles
   const FloatingParticles = () => (
@@ -83,7 +117,7 @@ export const Hero = () => {
           <Button 
             size="lg" 
             className="gap-2 shadow-glow glass-button bg-white text-white hover:bg-white/90 hover:text-black transition-all duration-300 hover:scale-105"
-            onClick={() => window.location.href = "/signup"}
+            onClick={handleDiscoverClick}
           >
             Start Discovering
             <ArrowRight className="w-4 h-4" />
@@ -92,7 +126,7 @@ export const Hero = () => {
             size="lg" 
             variant="outline"
             className="glass transition-all duration-300 hover:scale-105 hover:shadow-glow"
-            onClick={() => window.location.href = "/creator-signup"}
+            onClick={() => navigate('/creator-signup')}
           >
             Become a Creator
           </Button>
