@@ -40,6 +40,7 @@ CreatorStake solves that by allowing fans to **"stake" on creators**, providing 
 ### 1️⃣ Clone the repository
 
 ```git clone https://github.com/<your-username>/creatorstake.git```
+<br>
 ```cd creatorstake```
 
 ### 2️⃣ Install Dependencies
