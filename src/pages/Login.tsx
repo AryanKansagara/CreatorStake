@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuth0Context } from "@/contexts/Auth0Context";
+import { supabase } from "@/lib/supabase";
 
 // Friend selection interface
 interface Friend {
@@ -17,11 +19,43 @@ interface Friend {
 
 const Login = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated, loginWithRedirect, isLoading } = useAuth0Context();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [signupStep, setSignupStep] = useState(1);
+  
+  // Check if user is authenticated with Auth0 and exists in Supabase
+  useEffect(() => {
+    const checkAuth0AndSupabase = async () => {
+      if (isAuthenticated && user?.email) {
+        try {
+          // Check if user exists in Supabase
+          const { data, error } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', user.email)
+            .single();
+          
+          if (data) {
+            // User exists in Supabase, navigate to feed
+            toast.success('Login successful!');
+            navigate('/feed');
+          } else {
+            // User authenticated with Auth0 but not in Supabase yet
+            // Redirect to signup to complete profile
+            toast.info('Please complete your profile');
+            navigate('/signup');
+          }
+        } catch (error) {
+          console.error('Error checking user in Supabase:', error);
+        }
+      }
+    };
+    
+    checkAuth0AndSupabase();
+  }, [isAuthenticated, user, navigate]);
   
   // Sample friends for selection grid
   const [friends, setFriends] = useState<Friend[]>([
@@ -44,9 +78,9 @@ const Login = () => {
       return;
     }
     
-    // Mock successful login
-    toast.success("Login successful!");
-    navigate("/feed");
+    // Redirect to Auth0 login
+    toast.info('Please use Auth0 for login');
+    loginWithRedirect();
   };
 
   const handleNextStep = (e: React.FormEvent) => {
@@ -161,6 +195,23 @@ const Login = () => {
                 className="w-full glass-button bg-white text-black hover:bg-white/90 animate-reveal-delay-400 animate-pulse-glow transition-all duration-300 hover:scale-105"
               >
                 Login
+              </Button>
+              
+              {/* Divider */}
+              <div className="flex items-center my-4">
+                <div className="flex-1 border-t border-white/20"></div>
+                <span className="px-3 text-sm text-muted-foreground">OR</span>
+                <div className="flex-1 border-t border-white/20"></div>
+              </div>
+
+              {/* Auth0 Login Button */}
+              <Button 
+                type="button"
+                onClick={() => loginWithRedirect()}
+                className="w-full glass-button bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 hover:scale-105"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Connecting...' : 'Sign In with Auth0'}
               </Button>
             </form>
           </TabsContent>

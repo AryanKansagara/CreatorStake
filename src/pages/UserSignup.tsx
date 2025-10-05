@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Tabs,
   TabsContent,
@@ -14,18 +14,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronRight, User2, AtSign } from "lucide-react";
 import { toast } from "sonner";
 import ImageUploader from "@/components/ImageUploader";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth0Context } from "@/contexts/Auth0Context";
+import { supabase } from "@/lib/supabase";
 
 const UserSignup = () => {
   const navigate = useNavigate();
-  const { signUp, signIn, loading } = useAuth();
+  const location = useLocation();
+  const { user, isAuthenticated, loginWithRedirect, isLoading } = useAuth0Context();
   const [signupStep, setSignupStep] = useState(1);
   const [activeTab, setActiveTab] = useState("signup");
+  const [isAuth0User, setIsAuth0User] = useState(false);
   
   // User basic info
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [auth0Email, setAuth0Email] = useState("");
   
   // User profile
   const [fullName, setFullName] = useState("");
@@ -36,57 +40,112 @@ const UserSignup = () => {
   // User interests (for content recommendations)
   const [interests, setInterests] = useState<string[]>([]);
   
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Check if Auth0 user exists in Supabase
+  const checkSupabaseUser = async (email: string) => {
     try {
-      // Get the email/username and password from the form
-      const formElement = e.target as HTMLFormElement;
-      const emailInput = formElement.elements.namedItem('username') as HTMLInputElement;
-      const passwordInput = formElement.elements.namedItem('password') as HTMLInputElement;
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
       
-      if (!emailInput?.value || !passwordInput?.value) {
-        toast.error('Please enter both email and password');
-        return;
+      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
+        throw error;
       }
       
-      await signIn(emailInput.value, passwordInput.value);
-      navigate('/feed');
+      return !!data; // Returns true if user exists, false otherwise
     } catch (error) {
-      // Error is already handled in the auth context
+      console.error('Error checking user:', error);
+      return false;
     }
   };
+
+  // Create a Supabase user for Auth0 user
+  const createSupabaseUserForAuth0 = async (userData: any) => {
+    try {
+      if (!user?.sub) {
+        throw new Error('No Auth0 user ID available');
+      }
+
+      const { error } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: user.sub,
+            name: userData.username || user.name,
+            email: user.email,
+            role: 'fan',
+            profile_bio: userData.bio || null,
+            wallet_balance: 100, // Default balance for fans
+          },
+        ]);
+
+      if (error) throw error;
+      toast.success('Profile created successfully!');
+      navigate('/feed');
+    } catch (error: any) {
+      toast.error('Error creating profile: ' + error.message);
+    }
+  };
+
+  // Effect to check Auth0 authentication status
+  useEffect(() => {
+    const checkAuth0Status = async () => {
+      if (isAuthenticated && user?.email) {
+        setAuth0Email(user.email);
+        setEmail(user.email);
+        if (user.name) {
+          setFullName(user.name);
+        }
+        
+        const userExists = await checkSupabaseUser(user.email);
+        
+        if (userExists) {
+          // User already exists in Supabase, redirect to feed
+          toast.info('Welcome back!');
+          navigate('/feed');
+        } else {
+          // User needs to complete profile
+          setIsAuth0User(true);
+          setSignupStep(2); // Skip to profile creation step
+          toast.info('Please complete your profile');
+        }
+      }
+    };
+    
+    checkAuth0Status();
+  }, [isAuthenticated, user, navigate]);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.info('Please use Auth0 for login. Traditional login is not available.');
+  };
   
-  const  handleNextStep = async (e: React.FormEvent) => {
+  const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (signupStep === 1 && (!username || !password || !email)) {
-      toast.error("Please fill in all required fields");
+    if (signupStep === 1) {
+      toast.info('Please use Auth0 for signup. Traditional signup is not available.');
       return;
     }
     
-    if (signupStep === 1 && password.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
-    
-    if (signupStep === 2) {
-      // Register the user with Supabase
-      const { data, error } = await signUp(email, password, {
-        username,
-        name: fullName || username,
-        bio,
-        role: 'fan',
-        profile_image_url: null // In a real app, you'd upload this to storage first
-      });
-      if (error) {
-        // Error is handled in auth context
-        return;
+    // For Auth0 users completing their profile
+    if (isAuth0User) {
+      if (signupStep === 2) {
+        // Move to interests step
+        setSignupStep(3);
+      } else if (signupStep === 3) {
+        // Create Supabase user for Auth0 user
+        await createSupabaseUserForAuth0({
+          username: username || fullName,
+          bio: bio,
+          interests: interests
+        });
       }
-      navigate("/feed");
-      return;
+    } else {
+      // Non-Auth0 signup is disabled
+      toast.info('Please use Auth0 for signup. Traditional signup is not available.');
     }
-    
-    setSignupStep(signupStep + 1);
   };
   
   const handlePreviousStep = () => {
@@ -225,13 +284,29 @@ const UserSignup = () => {
                 </a>
               </div>
               
-              <Button 
-                type="submit" 
-                className="w-full glass-button bg-white text-black hover:bg-white/90 transition-all duration-300 hover:scale-105"
-                disabled={loading}
-              >
-                {loading ? 'Signing In...' : 'Sign In'}
-              </Button>
+                <Button 
+                  type="submit" 
+                  className="w-full glass-button bg-white text-black hover:bg-white/90 transition-all duration-300 hover:scale-105"
+                >
+                  Sign In
+                </Button>
+
+                {/* Divider */}
+                <div className="flex items-center my-4">
+                  <div className="flex-1 border-t border-white/20"></div>
+                  <span className="px-3 text-sm text-muted-foreground">OR</span>
+                  <div className="flex-1 border-t border-white/20"></div>
+                </div>
+
+                {/* Auth0 Social Login */}
+                <Button 
+                  type="button"
+                  onClick={loginWithRedirect}
+                  className="w-full glass-button bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 hover:scale-105"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Connecting...' : 'Sign In with Auth0'}
+                </Button>
 
               <div className="text-center text-sm text-muted-foreground">
                 Are you a creator? <a href="/creator-signup" className="text-accent hover:underline">Sign up as creator</a>
@@ -245,7 +320,7 @@ const UserSignup = () => {
             
             {/* Step 1: Account Info */}
             {signupStep === 1 && (
-              <form onSubmit={handleNextStep} className="space-y-6 animate-reveal">
+              <form onSubmit={(e) => handleNextStep(e)} className="space-y-6 animate-reveal">
                 <div className="space-y-2 animate-reveal-delay-100">
                   <Label htmlFor="signup-username">Choose Username *</Label>
                   <div>
@@ -294,6 +369,24 @@ const UserSignup = () => {
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
 
+                  {/* Divider */}
+                  <div className="flex items-center my-4">
+                    <div className="flex-1 border-t border-white/20"></div>
+                    <span className="px-3 text-sm text-muted-foreground">OR</span>
+                    <div className="flex-1 border-t border-white/20"></div>
+                  </div>
+
+                  {/* Auth0 Social Signup */}
+                  <Button 
+                    type="button"
+                    onClick={loginWithRedirect}
+                    className="w-full glass-button bg-blue-600 text-white hover:bg-blue-700 transition-all duration-300 hover:scale-105"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Connecting...' : 'Sign Up with Auth0'}
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+
                   <div className="text-center text-sm text-muted-foreground mt-4">
                     Are you a creator? <a href="/creator-signup" className="text-accent hover:underline">Sign up as creator</a>
                   </div>
@@ -309,7 +402,7 @@ const UserSignup = () => {
                   Tell us a bit about yourself and upload a profile picture
                 </p>
                 
-                <form className="space-y-6">
+                <form className="space-y-6" onSubmit={(e) => handleNextStep(e)}>
                   <div className="space-y-2">
                     <Label htmlFor="fullname">Full Name</Label>
                     <div className="relative">
@@ -369,7 +462,7 @@ const UserSignup = () => {
                     <Button 
                       type="button" 
                       className="flex-1 glass-button bg-white text-black hover:bg-white/90"
-                      onClick={handleNextStep}
+                      onClick={(e) => handleNextStep(e)}
                     >
                       Continue
                       <ChevronRight className="ml-2 h-4 w-4" />
@@ -471,10 +564,10 @@ const UserSignup = () => {
                     <Button 
                       type="button" 
                       className="flex-1 glass-button bg-white text-black hover:bg-white/90"
-                      onClick={handleNextStep}
+                      onClick={(e) => handleNextStep(e)}
                       disabled={interests.length < 3}
                     >
-                      Complete Registration
+                      {isAuth0User ? 'Complete Profile' : 'Complete Registration'}
                     </Button>
                   </div>
                 </div>

@@ -3,14 +3,89 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuth0Context } from "@/contexts/Auth0Context";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 export const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const { user, isAuthenticated } = useAuth0Context();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const t = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(t);
   }, []);
+  
+  // Handle discover button click
+  const handleDiscoverClick = async () => {
+    if (isAuthenticated && user?.email) {
+      // User is authenticated with Auth0, check if they exist in Supabase
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', user.email)
+          .single();
+        
+        if (data) {
+          // User exists in Supabase, navigate to feed
+          navigate('/feed');
+        } else {
+          // User authenticated with Auth0 but not in Supabase yet
+          // Redirect to signup to complete profile
+          navigate('/signup');
+        }
+      } catch (error) {
+        console.error('Error checking user in Supabase:', error);
+        navigate('/signup');
+      }
+    } else {
+      // Not authenticated, go to signup
+      navigate('/signup');
+    }
+  };
+
+  // Random floating particles
+  const FloatingParticles = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(30)].map((_, i) => (
+        <div 
+          key={i} 
+          className="absolute rounded-full bg-white/20"
+          style={{
+            width: `${Math.random() * 6 + 2}px`,
+            height: `${Math.random() * 6 + 2}px`,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            opacity: Math.random() * 0.5 + 0.2,
+            animation: `float ${Math.random() * 10 + 15}s infinite linear`,
+            animationDelay: `${Math.random() * 10}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+
+  // Floating glass orbs
+  const FloatingOrbs = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(5)].map((_, i) => (
+        <div 
+          key={i} 
+          className={`absolute rounded-full glass ${i % 2 === 0 ? 'animate-float' : 'animate-float-reverse'}`}
+          style={{
+            width: `${Math.random() * 300 + 100}px`,
+            height: `${Math.random() * 300 + 100}px`,
+            left: `${Math.random() * 90}%`,
+            top: `${Math.random() * 90}%`,
+            animationDelay: `${Math.random() * 5}s`,
+            opacity: 0.2
+          }}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <section className="relative overflow-hidden bg-black pt-6 md:pt-8 pb-8">
@@ -72,7 +147,7 @@ export const Hero = () => {
             <Button
               size="lg"
               className="gap-2 shadow-glow glass-button bg-white text-white hover:bg-white/90 hover:text-black transition-all duration-300 hover:scale-105"
-              onClick={() => (window.location.href = "/login")}
+              onClick={handleDiscoverClick}
             >
               Start Discovering
               <ArrowRight className="w-4 h-4" />
@@ -81,7 +156,7 @@ export const Hero = () => {
               size="lg"
               variant="outline"
               className="glass transition-all duration-300 hover:scale-105 hover:shadow-glow"
-              onClick={() => (window.location.href = "/creator-signup")}
+              onClick={() => navigate('/creator-signup')}
             >
               Become a Creator
             </Button>
