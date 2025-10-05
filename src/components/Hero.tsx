@@ -1,119 +1,138 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, TrendingUp, Users, Coins } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 100);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(t);
   }, []);
 
-  // Random floating particles
-  const FloatingParticles = () => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(30)].map((_, i) => (
-        <div 
-          key={i} 
-          className="absolute rounded-full bg-white/20"
-          style={{
-            width: `${Math.random() * 6 + 2}px`,
-            height: `${Math.random() * 6 + 2}px`,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            opacity: Math.random() * 0.5 + 0.2,
-            animation: `float ${Math.random() * 10 + 15}s infinite linear`,
-            animationDelay: `${Math.random() * 10}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-
-  // Floating glass orbs
-  const FloatingOrbs = () => (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(5)].map((_, i) => (
-        <div 
-          key={i} 
-          className={`absolute rounded-full glass ${i % 2 === 0 ? 'animate-float' : 'animate-float-reverse'}`}
-          style={{
-            width: `${Math.random() * 300 + 100}px`,
-            height: `${Math.random() * 300 + 100}px`,
-            left: `${Math.random() * 90}%`,
-            top: `${Math.random() * 90}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            opacity: 0.2
-          }}
-        />
-      ))}
-    </div>
-  );
-
   return (
-    <div className="pt-20 pb-16 relative overflow-hidden">
-      <FloatingParticles />
-      <FloatingOrbs />
-      
-      <div className="container mx-auto px-4 text-center relative z-10">
-        {/* Main Headline */}
-        <div className={`transition-all duration-1000 transform ${isVisible ? 'opacity-100' : 'opacity-0 translate-y-10'}`}>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Invest in creators
-            <span className="bg-gradient-primary bg-clip-text text-transparent light-reflection relative inline-blockv ml-6">
-              {" "}
-              before they blow up
-              <Sparkles 
-                className="absolute -top-6 -right-6 w-5 h-5 text-white animate-float-fast" 
-                style={{opacity: 0.7}}
-              />
-            </span>
-          </h1>
-        </div>
-        
-        {/* Description */}
-        <p className={`text-xl text-muted-foreground max-w-2xl mx-auto transition-all duration-1000 delay-300 transform ${isVisible ? 'opacity-100' : 'opacity-0 translate-y-10'}`}>
-          Discover rising stars, invest tokens early, and earn returns as they grow. 
-          Be part of their success story from day one.
-        </p>
+    <section className="relative overflow-hidden bg-black pt-6 md:pt-8 pb-8">
+      {/* subtle radial glow behind text for depth */}
+      <div className="pointer-events-none absolute -z-10 -left-40 top-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl opacity-60 bg-[radial-gradient(ellipse_at_center,_rgba(251,191,36,0.10),_transparent_60%)]" />
 
-        {/* CTA Buttons */}
-        <div className={`flex flex-wrap gap-4 justify-center pt-4 transition-all duration-1000 delay-500 transform ${isVisible ? 'opacity-100' : 'opacity-0 translate-y-10'}`}>
-          <Button 
-            size="lg" 
-            className="gap-2 shadow-glow glass-button bg-white text-white hover:bg-white/90 hover:text-black transition-all duration-300 hover:scale-105"
-            onClick={() => window.location.href = "/signup"}
+      {/* Split layout with tighter vertical footprint */}
+      <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] items-center gap-6 md:gap-10 min-h-[56vh] md:min-h-[60vh]">
+        {/* LEFT — content (same copy) */}
+        <div className="text-left relative z-20">
+          <div
+            className={`transition-all duration-1000 transform ${
+              isVisible ? "opacity-100" : "opacity-0 translate-y-10"
+            }`}
           >
-            Start Discovering
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-          <Button 
-            size="lg" 
-            variant="outline"
-            className="glass transition-all duration-300 hover:scale-105 hover:shadow-glow"
-            onClick={() => window.location.href = "/creator-signup"}
+            <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6 text-white">
+              Invest in creators{" "}
+              <span className="relative inline-block ml-1 align-top">
+                {/* Base text stays white */}
+                <span className="relative z-0">before they blow up</span>
+
+                {/* Moving yellow/orange shimmer over the base text */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 z-20
+                            cstake-clip-text animate-cstake-shimmer
+                            bg-[linear-gradient(90deg,transparent,hsl(38_92%_50%/_0.95),transparent)]"
+                >
+                  before they blow up
+                </span>
+
+                <Sparkles
+                  className="absolute -top-6 -right-6 w-5 h-5 text-white"
+                  style={{ opacity: 0.85 }}
+                />
+              </span>
+            </h1>
+
+
+
+
+
+          </div>
+
+          <p
+            className={`text-xl text-muted-foreground max-w-2xl transition-all duration-1000 delay-200 transform ${
+              isVisible ? "opacity-100" : "opacity-0 translate-y-10"
+            }`}
           >
-            Become a Creator
-          </Button>
+            Discover rising stars, invest tokens early, and earn returns as they grow.
+            Be part of their success story from day one.
+          </p>
+
+          <div
+            className={`flex flex-wrap gap-4 pt-5 transition-all duration-1000 delay-400 transform ${
+              isVisible ? "opacity-100" : "opacity-0 translate-y-10"
+            }`}
+          >
+            <Button
+              size="lg"
+              className="gap-2 shadow-glow glass-button bg-white text-white hover:bg-white/90 hover:text-black transition-all duration-300 hover:scale-105"
+              onClick={() => (window.location.href = "/login")}
+            >
+              Start Discovering
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="glass transition-all duration-300 hover:scale-105 hover:shadow-glow"
+              onClick={() => (window.location.href = "/creator-signup")}
+            >
+              Become a Creator
+            </Button>
+          </div>
+
+          {/* Stats — hover highlight like “Become a Creator” (soft white glow) */}
+          <div
+            className={`grid grid-cols-1 md:grid-cols-3 gap-5 pt-8 md:pt-9 max-w-2xl transition-all duration-1000 delay-600 transform ${
+              isVisible ? "opacity-100" : "opacity-0 translate-y-10"
+            }`}
+          >
+            {[
+              { top: "500+", bot: "Rising Creators" },
+              { top: "$2.4M", bot: "Invested" },
+              { top: "64%", bot: "Avg. ROI" },
+            ].map((card) => (
+              <div key={card.bot} className="group relative">
+                {/* soft white glow on hover (matches button glow style) */}
+                <div className="absolute -inset-[2px] rounded-xl opacity-0 group-hover:opacity-100 transition duration-300 blur-lg bg-white/12" />
+                <div className="relative glass p-5 rounded-xl hover:shadow-glow transition">
+                  <div className="text-3xl font-bold">{card.top}</div>
+                  <div className="text-muted-foreground">{card.bot}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 transition-all duration-1000 delay-700 transform ${isVisible ? 'opacity-100' : 'opacity-0 translate-y-10'}`}>
-          <div className="glass p-4 rounded-lg hover:animate-wave transition-all duration-300 hover:shadow-glow">
-            <div className="text-3xl font-bold animate-scale-pulse">500+</div>
-            <div className="text-muted-foreground">Rising Creators</div>
-          </div>
-          <div className="glass p-4 rounded-lg hover:animate-wave transition-all duration-300 hover:shadow-glow">
-            <div className="text-3xl font-bold animate-scale-pulse">$2.4M</div>
-            <div className="text-muted-foreground">Invested</div>
-          </div>
-          <div className="glass p-4 rounded-lg hover:animate-wave transition-all duration-300 hover:shadow-glow">
-            <div className="text-3xl font-bold animate-scale-pulse">64%</div>
-            <div className="text-muted-foreground">Avg. ROI</div>
-          </div>
+                {/* RIGHT — image panel with soft, natural blend */}
+                <div className="relative h-[44vh] md:h-[64vh] overflow-hidden rounded-2xl md:rounded-3xl">
+          {/* 1) Photo */}
+          <img
+            src="/bg_imgs/BG_Img.jpg"
+            alt="Creator performing"
+            className="absolute inset-0 w-full h-full object-cover scale-[1.03] will-change-transform"
+          />
+
+          {/* 2) Subtle top/bottom vignette */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/45" />
+
+          {/* 3) Feathered left edge (wide, blurred gradient into black) */}
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 w-3/5 md:w-1/2 -translate-x-1/3 blur-3xl
+                       bg-gradient-to-l from-transparent via-black/60 to-black/95"
+          />
+
+          {/* 4) Very light backdrop blur right on the seam */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1/4 md:w-1/5 backdrop-blur-sm" />
         </div>
-      </div>
-    </div>
+      </div> {/* ← close the grid container */}
+    </section>
   );
 };
+
