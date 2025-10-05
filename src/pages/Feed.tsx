@@ -106,15 +106,11 @@ const formatCompactNumber = (num: number): string => {
 const Feed = () => {
   const navigate = useNavigate();
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [showInvestModal, setShowInvestModal] = useState(false);
-  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
-  const [investmentAmount, setInvestmentAmount] = useState(100);
   const [showAdvisor, setShowAdvisor] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   // Invest modal
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
