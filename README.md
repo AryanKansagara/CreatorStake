@@ -38,19 +38,19 @@ CreatorStake solves that by allowing fans to **"stake" on creators**, providing 
   ## ⚙️ Setup & Installation
 
 ### 1️⃣ Clone the repository
-```bash```
+
 ```git clone https://github.com/<your-username>/creatorstake.git```
 ```cd creatorstake```
 
 ### 2️⃣ Install Dependencies
-```bash```
+
 ```npm install```
 
 ### 3️⃣ Add environment variables
 The API keys will be in ```.env``` or ```env.example``` or ```env.local```
 
 ### 4️⃣ Run locally
-```bash```
+
 ```npm run dev```
 
 ##💡 Future Roadmap
