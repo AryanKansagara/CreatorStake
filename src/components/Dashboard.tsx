@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Coins, Users, DollarSign } from "lucide-react";
+import { Navigation } from "@/components/Navigation";
 
 interface DashboardProps {
   userType: "fan" | "creator";
@@ -46,8 +47,13 @@ export const Dashboard = ({ userType }: DashboardProps) => {
   const totalReturn = ((totalValue - totalInvested) / totalInvested) * 100;
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-hero flex">
+      {/* Navigation Sidebar */}
+      <Navigation activePath="/dashboard" />
+      
+      {/* Main content */}
+      <div className="ml-16 md:ml-64 flex-1 p-8">
+        <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div>
           <h1 className="text-4xl font-bold mb-2">Your Portfolio</h1>
@@ -151,6 +157,7 @@ export const Dashboard = ({ userType }: DashboardProps) => {
             ))}
           </div>
         </Card>
+        </div>
       </div>
     </div>
   );

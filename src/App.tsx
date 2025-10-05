@@ -18,6 +18,7 @@ import UserSignup from "./pages/UserSignup";
 import CreatorProfile from "./components/CreatorProfile";
 import CreatorProfileV2 from "./components/CreatorProfileV2";
 import { Dashboard } from "./components/Dashboard";
+import { CreatorDashboard } from "./components/CreatorDashboard";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
           </TooltipProvider>
         </CustomAuth0Provider>
       </Auth0Provider>
+      
     </QueryClientProvider>
   </ThemeProvider>
 );

@@ -93,3 +93,28 @@ All colors MUST be HSL.
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
+/* === CreatorStake hero shimmer (single source of truth) === */
+@keyframes cstake-shimmer {
+  0%   { background-position: -40% 0; }
+  100% { background-position: 140% 0; }
+}
+
+@layer utilities {
+  /* Cross-browser text clipping (includes the WebKit fill fix) */
+  .cstake-clip-text {
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent; /* Safari fix */
+    color: transparent;                   /* fallback */
+  }
+
+  .animate-cstake-shimmer {
+    animation: cstake-shimmer 3s ease-in-out infinite;
+    background-repeat: no-repeat;
+    background-size: 50% 100%; /* width of the moving band; tweak in JSX if you want */
+  }
+}
+
+
+
+
