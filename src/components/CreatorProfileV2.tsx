@@ -26,6 +26,8 @@ interface CreatorData {
   stockHistory?: {date: string; price: number}[];
   priceChange?: number;
   sentiment?: {positive: number; neutral: number; negative: number};
+  sentiment_positive?: number; // New field from database
+  last_updated?: string;
 }
 
 interface PostData {
@@ -84,19 +86,70 @@ export default function CreatorProfileV2() {
     // Add current month at current price
     stockHistory.push({
       date: months[currentMonth],
-      price: basePrice
     });
     
     return stockHistory;
   };
   
-  // Load creator data from Supabase
+  // Fetch creator data and related info
   useEffect(() => {
+    let sentimentSubscription: any;
+
+    const setupRealtimeSubscription = (creatorId: string) => {
+      // Subscribe to real-time changes on the creators table for sentiment updates
+      sentimentSubscription = supabase
+        .channel('creator_sentiment')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'creators',
+            filter: `id=eq.${creatorId}`
+          },
+          (payload) => {
+            console.log('Real-time sentiment update:', payload);
+            
+            // Update creator data with new sentiment
+            setCreator(currentCreator => {
+              if (!currentCreator) return currentCreator;
+              
+              const updatedCreator = {
+                ...currentCreator,
+                sentiment_positive: payload.new.sentiment_positive,
+                last_updated: payload.new.last_updated,
+              };
+              
+              // Update sentiment object
+              if (updatedCreator.sentiment && payload.new.sentiment_positive) {
+                const positive = payload.new.sentiment_positive;
+                const neutral = updatedCreator.sentiment.neutral;
+                const negative = 100 - positive - neutral;
+                
+                updatedCreator.sentiment = {
+                  positive,
+                  neutral,
+                  negative
+                };
+              }
+              
+              return updatedCreator;
+            });
+            
+            // Show toast notification
+            toast.success('Creator sentiment updated!');
+          }
+        )
+        .subscribe();
+    };
+
     const fetchCreatorData = async () => {
-      if (!id) return;
-      
+      setLoading(true);
       try {
-        setLoading(true);
+        if (!id) {
+          setError("Creator ID is required");
+          return;
+        }
         
         // Fetch creator data based on user_id
         const { data: creatorData, error: creatorError } = await supabase
@@ -144,13 +197,16 @@ export default function CreatorProfileV2() {
         const previousPrice = stockHistory.length > 1 ? stockHistory[stockHistory.length - 2].price : creatorData.current_stock_price * 0.9;
         const priceChange = parseFloat((((creatorData.current_stock_price - previousPrice) / previousPrice) * 100).toFixed(1));
 
-        // Add sentiment data
+        // Use sentiment data from database if available, or generate mock data
+        const positive = creatorData.sentiment_positive || Math.floor(Math.random() * 30) + 40; // 40-70%
+        const neutral = Math.floor(Math.random() * 20) + 20; // 20-40%
+        const negative = 100 - positive - neutral;
+        
         const sentiment = {
-          positive: Math.floor(Math.random() * 30) + 40, // 40-70%
-          neutral: Math.floor(Math.random() * 20) + 20, // 20-40%
-          negative: 0 // Will be calculated to make 100%
+          positive,
+          neutral,
+          negative
         };
-        sentiment.negative = 100 - sentiment.positive - sentiment.neutral;
 
         // Process posts to separate videos
         const posts = postsData?.filter(post => !post.is_video) || [];
@@ -177,7 +233,93 @@ export default function CreatorProfileV2() {
     };
 
     fetchCreatorData();
+
+    // Cleanup subscription when component unmounts
+    return () => {
+      if (sentimentSubscription) {
+        supabase.removeChannel(sentimentSubscription);
+      }
+    };
   }, [id]);
+
+  // Setup real-time subscription when creator data is loaded
+  useEffect(() => {
+    let subscription: any;
+    
+    if (creator?.id) {
+      // Subscribe to real-time changes on the creators table for sentiment updates
+      subscription = supabase
+        .channel(`creator_sentiment_${creator.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'creators',
+            filter: `id=eq.${creator.id}`
+          },
+          (payload) => {
+            console.log('Real-time sentiment update:', payload);
+            
+            // Update creator data with new sentiment
+            setCreator(currentCreator => {
+              if (!currentCreator) return currentCreator;
+              
+              const updatedCreator = {
+                ...currentCreator,
+                sentiment_positive: payload.new.sentiment_positive,
+                last_updated: payload.new.last_updated,
+              };
+              
+              // Update sentiment object
+              if (updatedCreator.sentiment && payload.new.sentiment_positive) {
+                const positive = payload.new.sentiment_positive;
+                const neutral = updatedCreator.sentiment.neutral;
+                const negative = 100 - positive - neutral;
+                
+                updatedCreator.sentiment = {
+                  positive,
+                  neutral,
+                  negative
+                };
+              }
+              
+              return updatedCreator;
+            });
+            
+            // Show toast notification
+            toast.success(`Sentiment updated to ${payload.new.sentiment_positive}%!`);
+          }
+        )
+        .subscribe();
+    }
+
+    // Cleanup subscription when component unmounts or creator changes
+    return () => {
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+    };
+  }, [creator?.id]); // Only re-run when creator ID changes
+
+  // Helper function to get sentiment class based on score
+  const getSentimentClass = (score: number): string => {
+    if (score >= 75) return 'text-emerald-500 border-emerald-500/30';
+    if (score >= 64) return 'text-emerald-400 border-emerald-400/30';
+    if (score >= 46) return 'text-yellow-500 border-yellow-500/30';
+    if (score >= 26) return 'text-orange-500 border-orange-500/30';
+    return 'text-red-500 border-red-500/30';
+  };
+
+  // Helper function to get sentiment label based on score
+  const getSentimentLabel = (score: number): string => {
+    if (score >= 86) return 'Very Bullish';
+    if (score >= 75) return 'Bullish';
+    if (score >= 64) return 'Somewhat Bullish';
+    if (score >= 46) return 'Neutral';
+    if (score >= 26) return 'Somewhat Bearish';
+    return 'Bearish';
+  };
 
   // Format numbers with k/M suffix
   const formatNumber = (num: number): string => {
@@ -375,27 +517,44 @@ export default function CreatorProfileV2() {
           {/* Sentiment Chart */}
           <div className="glass p-4 rounded-lg flex items-center">
             <div className="flex-1">
-              <p className="text-sm text-muted-foreground mb-2">Investor Sentiment</p>
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-muted-foreground mb-2">Investor Sentiment</p>
+                {creator.last_updated && (
+                  <p className="text-[10px] text-muted-foreground mb-2">
+                    Updated {new Date(creator.last_updated).toLocaleTimeString()}
+                  </p>
+                )}
+              </div>
               <div className="relative h-16 w-full">
                 {/* Sentiment bubbles */}
                 {creator.sentiment && (
                   <>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-emerald-500/60 flex items-center justify-center">
+                    <div className={
+                      `absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full flex items-center justify-center ${
+                        creator.sentiment.positive >= 75 ? 'bg-emerald-500/70' : 
+                        creator.sentiment.positive >= 64 ? 'bg-emerald-400/70' : 
+                        creator.sentiment.positive >= 46 ? 'bg-yellow-500/70' : 
+                        creator.sentiment.positive >= 26 ? 'bg-orange-500/70' : 
+                        'bg-red-500/70'
+                      }`
+                    }>
                       <span className="text-lg font-bold text-white">{creator.sentiment.positive}%</span>
                     </div>
-                    <div className="absolute right-16 top-0 w-10 h-10 rounded-full bg-gray-400/60 flex items-center justify-center">
+                    {/* <div className="absolute right-16 top-0 w-10 h-10 rounded-full bg-gray-400/60 flex items-center justify-center">
                       <span className="text-xs font-bold text-white">{creator.sentiment.neutral}%</span>
                     </div>
                     <div className="absolute right-20 bottom-0 w-6 h-6 rounded-full bg-red-400/60 flex items-center justify-center">
                       <span className="text-[10px] font-bold text-white">{creator.sentiment.negative}%</span>
-                    </div>
+                    </div> */}
                   </>
                 )}
               </div>
             </div>
             <div className="w-24 text-center">
-              <div className="glass px-2 py-1 rounded-full text-xs mb-2 text-emerald-500 border border-emerald-500/30">
-                {(creator.priceChange || 0) > 5 ? 'Bullish' : (creator.priceChange || 0) < 0 ? 'Bearish' : 'Neutral'}
+              <div className={
+                `glass px-2 py-1 rounded-full text-xs mb-2 border ${getSentimentClass(creator.sentiment?.positive || 0)}`
+              }>
+                {getSentimentLabel(creator.sentiment?.positive || 0)}
               </div>
             </div>
           </div>

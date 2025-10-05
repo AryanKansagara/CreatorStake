@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { TrendingUp, Coins, Users, DollarSign, BarChart2, MessageCircle, Image as ImageIcon } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
 import { toast } from "sonner";
+import { analyzeSentiment } from "@/lib/gemini";
 
 // Initialize Supabase client
 const supabaseUrl = 'https://yyyfpcriefcurnosdmdv.supabase.co';
@@ -20,6 +21,8 @@ interface CreatorData {
   current_stock_price: number;
   followers_count: number;
   created_at: string;
+  sentiment_positive?: number;
+  last_updated?: string;
 }
 
 interface UserData {
@@ -165,6 +168,11 @@ export const CreatorDashboard = () => {
     
     try {
       setPostLoading(true);
+      toast.loading("Analyzing post sentiment...");
+      
+      // Analyze sentiment using Gemini API
+      const sentimentScore = await analyzeSentiment(newPost.content, newPost.imageUrl);
+      console.log("Sentiment score:", sentimentScore);
       
       // Create post in Supabase
       const { data, error } = await supabase
@@ -177,9 +185,47 @@ export const CreatorDashboard = () => {
           comments_count: 0,
         })
         .select();
-        
+      
       if (error) {
         throw error;
+      }
+      
+      // Store sentiment in the sentiments table with correct fields
+      const { data: sentimentData, error: sentimentError } = await supabase
+        .from('sentiments')
+        .insert({
+          creator_id: creatorData.id,
+          post_id: data[0].id,
+          platform: 'starvest', // Required field
+          sentiment_score: sentimentScore,
+          followers_count: creatorData.followers_count
+        })
+        .select();
+      
+      if (sentimentError) {
+        console.error("Error storing sentiment data:", sentimentError);
+        // Continue execution despite sentiment error
+      }
+      
+      // Update creator's sentiment in the database
+      // We'll store the latest sentiment score in the creators table
+      const { error: creatorUpdateError } = await supabase
+        .from('creators')
+        .update({ 
+          sentiment_positive: sentimentScore,
+          last_updated: new Date().toISOString()
+        })
+        .eq('id', creatorData.id);
+      
+      if (creatorUpdateError) {
+        console.error("Error updating creator sentiment:", creatorUpdateError);
+        // Continue execution despite error in updating sentiment
+      } else {
+        // Update local state to reflect the new sentiment score
+        setCreatorData({
+          ...creatorData,
+          sentiment_positive: sentimentScore
+        });
       }
       
       // Add new post to the posts list
@@ -187,7 +233,8 @@ export const CreatorDashboard = () => {
       
       // Reset form
       setNewPost({ content: '', imageUrl: '' });
-      toast.success("Post created successfully!");
+      toast.success(`Post created successfully! Sentiment score: ${sentimentScore}%`);
+      setPostLoading(false);
       
     } catch (error: any) {
       console.error("Error creating post:", error);
