@@ -7,7 +7,8 @@ import { createClient } from "@supabase/supabase-js";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import InvestmentAdvisor from "@/components/InvestmentAdvisor";
 import {
   Dialog,
   DialogContent,
@@ -95,12 +96,20 @@ const formatCompactNumber = (num: number): string => {
   if (num < 1000) return `${num}`;
   if (num < 1_000_000) return `${(num / 1000).toFixed(1)}k`;
   return `${(num / 1_000_000).toFixed(1)}M`;
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (diffInSeconds < 60) return 'just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+  return `${Math.floor(diffInSeconds / 86400)}d`;
 };
 
 /* ---------- Component ---------- */
 const Feed = () => {
   const navigate = useNavigate();
-
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [showInvestModal, setShowInvestModal] = useState(false);
+  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
+  const [investmentAmount, setInvestmentAmount] = useState(100);
+  const [showAdvisor, setShowAdvisor] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
@@ -226,6 +235,29 @@ const Feed = () => {
   };
 
   /* ---------- States ---------- */
+  
+  // Sign out function using Supabase
+  const signOut = async () => {
+    try {
+      setIsSigningOut(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast.error("Error signing out: " + error.message);
+        console.error("Sign out error:", error);
+      } else {
+        toast.success("Signed out successfully");
+        navigate('/signup');
+      }
+    } catch (error: any) {
+      console.error("Sign out error:", error);
+      toast.error("Failed to sign out: " + (error.message || "Unknown error"));
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-hero grid place-items-center">
@@ -286,13 +318,21 @@ const Feed = () => {
 
       {/* Main column */}
       <div className="ml-16 md:ml-64 flex-1">
-        {/* Header */}
+
+        {/* Top header */}
         <header className="sticky top-0 z-30 backdrop-blur-xl bg-black/40 border-b border-white/10">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Your Feed</h2>
-            <Button size="icon" variant="ghost" className="rounded-full">
-              <Bell size={18} />
-            </Button>
+          <div className="container max-w-4xl mx-auto px-4 flex items-center justify-between">
+            <h2 className="text-xl font-bold">Your Feed</h2>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowAdvisor(true)}>
+                <TrendingUp size={16} />
+                <span className="hidden sm:inline">Investment Advisor</span>
+              </Button>
+              <Button size="icon" variant="ghost" className="rounded-full">
+                <Bell size={20} />
+              </Button>
+            </div>
+
           </div>
         </header>
 
@@ -626,6 +666,12 @@ const Feed = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Investment Advisor */}
+      <InvestmentAdvisor 
+        isOpen={showAdvisor} 
+        onClose={() => setShowAdvisor(false)} 
+      />
     </div>
   );
 };
